@@ -25,8 +25,6 @@ using namespace std;
 
 int main (int argc, char** argv)
 {
-    setlocale(LC_ALL, "");
-
     QApplication App(argc, argv);
     Core C;
     C.Errors_Continue=true; //Always for the GUI

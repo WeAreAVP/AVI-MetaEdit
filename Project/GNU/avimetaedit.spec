@@ -11,7 +11,7 @@ Version:		%avimetaedit_version
 Release:		1
 Summary:		Supplies technical and tag information about a video or audio file (CLI)
 Group:			Productivity/Multimedia/Other
-License:		GPL
+License:		NARA
 URL:			http://mediaarea.net
 Packager:		Jerome Martinez <info@mediaarea.net>
 Source0:		avimetaedit_%{version}-1.tar.gz
@@ -19,6 +19,15 @@ BuildRoot:		%{_tmppath}/%{name}-%{version}-%{release}-root
 BuildRequires:	dos2unix
 BuildRequires: 	gcc-c++
 BuildRequires:	pkgconfig
+BuildRequires:  automake
+BuildRequires:  autoconf
+BuildRequires:  libqt4-devel
+%if 0%{?fedora_version}
+BuildRequires:  qt-devel
+%endif
+%if 0%{?fedora_version}
+BuildRequires:  desktop-file-utils
+%endif
 %if 0%{?suse_version}
 BuildRequires:	update-desktop-files
 %endif
@@ -33,20 +42,6 @@ AVI MetaEdit provides this service:
 %package gui
 Summary:	Supplies technical and tag information about a video or audio file (GUI)
 Group:		Productivity/Multimedia/Other
-BuildRequires:	libqt4-devel
-%if 0%{?suse_version}
-BuildRequires:	update-desktop-files
-%endif
-%if 0%{?centos_version} ||  0%{?rhel_version} || 0%{?fedora_version}
-Requires:	qt4 >= 4.0.0
-%endif
-%if 0%{?mandriva}
-Requires:	libqtgui4 >= 4.0.0
-%endif
-%if 0%{?suse_version} ||  0%{?opensuse_version}
-Requires:	libqt4 >= 4.0.0
-Requires:	libqt4-x11 >= 4.0.0
-%endif
 
 %description gui
 avimetaedit GUI (Graphical User Interface)
@@ -76,21 +71,18 @@ pushd Project/GNU/CLI
 popd
 
 # now build GUI
-pushd Project/GNU/GUI
-	%__chmod +x autogen
-	./autogen
-	%configure
-
+pushd Project/QtCreator
+    qmake BINDIR=%{_bindir}
 	%__make %{?jobs:-j%{jobs}}
 popd
 
 %install
 pushd Project/GNU/CLI
-	%__make install-strip DESTDIR=%{buildroot}
+	%__make install DESTDIR=%{buildroot}
 popd
 
-pushd Project/GNU/GUI
-	%__make install-strip DESTDIR=%{buildroot}
+pushd Project/QtCreator
+    %__make install INSTALL_ROOT=%{buildroot}
 popd
 
 # icon
@@ -151,6 +143,6 @@ popd
 %{_datadir}/kde4/services/ServiceMenus/*.desktop
 
 %changelog
-* Tue Jan 01 2012 Jerome Martinez <info@mediaarea.net> - 1.0.0-0
+* Wed Jan 01 2014 MediaArea.net SARL <info@mediaarea.net> - 1.0.0-0
 - See History.txt for more info and real dates
 
