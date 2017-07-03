@@ -11,7 +11,7 @@ Version:		%avimetaedit_version
 Release:		1
 Summary:		Supplies technical and tag information about a video or audio file (CLI)
 Group:			Productivity/Multimedia/Other
-License:		NARA
+License:		CC0-1.0+
 URL:			http://mediaarea.net
 Packager:		Jerome Martinez <info@mediaarea.net>
 Source0:		avimetaedit_%{version}-1.tar.gz
