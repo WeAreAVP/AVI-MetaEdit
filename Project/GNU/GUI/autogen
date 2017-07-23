@@ -1,5 +1,4 @@
-#!/bin/sh
-
+libtoolize --automake
 aclocal
 automake -a
 autoconf
