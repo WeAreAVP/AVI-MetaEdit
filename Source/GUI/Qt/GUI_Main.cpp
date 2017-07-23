@@ -21,17 +21,17 @@
 #include "GUI/Qt/GUI_Main_Output_Log.h"
 #include "GUI/Qt/GUI_Main_Output_Trace.h"
 #include "GUI/Qt/GUI_Preferences.h"
-#include <QtCore/QEvent>
-#include <QtCore/QMimeData>
-#include <QtCore/QUrl>
+#include <QEvent>
+#include <QMimeData>
+#include <QUrl>
 #include <QApplication>
 #include <QDropEvent>
 #include <QDragEnterEvent>
 #include <QMessageBox>
 #include <QDesktopWidget>
 #include <QProgressDialog>
-#include <QtCore/QThread>
-#include <QtCore/QTimer>
+#include <QThread>
+#include <QTimer>
 #include "ZenLib/Ztring.h"
 using namespace std;
 //---------------------------------------------------------------------------

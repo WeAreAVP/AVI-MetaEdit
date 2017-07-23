@@ -12,7 +12,7 @@
 #include "Common/Core.h"
 #include "ZenLib/Ztring.h"
 #include <QLabel>
-#include <QtCore/QEvent>
+#include <QEvent>
 #include <QFont>
 //---------------------------------------------------------------------------
 
