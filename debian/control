@@ -14,6 +14,17 @@ Description: AVI MetaEdit provides:
  .
  (To be filled)
 
+Package: avimetaedit-dbg
+Section: debug
+Architecture: any
+Priority: extra
+Depends: avimetaedit (= ${binary:Version})
+Description: AVI MetaEdit provides:
+ .
+ (To be filled)
+ .
+ This package contains the debugging symbols.
+
 Package: avimetaedit-gui
 Section: utils
 Architecture: any
@@ -23,3 +34,14 @@ Description: AVI MetaEdit provides:
  (To be filled)
  .
  This package contains the graphical user interface
+
+Package: avimetaedit-gui-dbg
+Section: debug
+Architecture: any
+Priority: extra
+Depends: avimetaedit-gui (= ${binary:Version})
+Description: AVI MetaEdit provides:
+ .
+ (To be filled)
+ .
+ This package contains the debugging symbols of the graphical user interface.

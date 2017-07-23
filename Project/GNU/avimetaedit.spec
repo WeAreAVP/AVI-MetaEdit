@@ -21,15 +21,17 @@ BuildRequires: 	gcc-c++
 BuildRequires:	pkgconfig
 BuildRequires:  automake
 BuildRequires:  autoconf
-BuildRequires:  libqt4-devel
-%if 0%{?fedora_version}
-BuildRequires:  qt-devel
-%endif
 %if 0%{?fedora_version}
 BuildRequires:  desktop-file-utils
 %endif
 %if 0%{?suse_version}
 BuildRequires:	update-desktop-files
+%endif
+BuildRequires:  automake
+BuildRequires:  autoconf
+%if 0%{?mageia}
+BuildRequires:  sane-backends-iscan
+BuildRequires:  libuuid-devel
 %endif
 
 %description
@@ -43,6 +45,20 @@ AVI MetaEdit provides this service:
 Summary:	Supplies technical and tag information about a video or audio file (GUI)
 Group:		Productivity/Multimedia/Other
 
+%if 0%{?fedora_version}
+BuildRequires:	qt-devel
+%else
+%if 0%{?rhel} == 5
+BuildRequires:	qt4-devel
+%else
+BuildRequires:	libqt4-devel
+%endif
+%endif
+
+%if 0%{?fedora_version} == 99
+BuildRequires: gnu-free-sans-fonts
+%endif
+
 %description gui
 avimetaedit GUI (Graphical User Interface)
 
@@ -53,7 +69,7 @@ AVI MetaEdit provides this service:
 This package contains the graphical user interface
 
 %prep
-%setup -q -n AVI_MetaEdit
+%setup -q -n avimetaedit
 dos2unix     *.txt Release/*.txt
 %__chmod 644 *.html *.txt Release/*.txt
 
@@ -65,14 +81,19 @@ export CXXFLAGS="$RPM_OPT_FLAGS"
 pushd Project/GNU/CLI
 	%__chmod +x autogen
 	./autogen
-	%configure
+	%if 0%{?mageia} > 5
+		%configure --disable-dependency-tracking
+	%else
+		%configure
+	 %endif
 
 	%__make %{?jobs:-j%{jobs}}
 popd
 
 # now build GUI
 pushd Project/QtCreator
-    qmake BINDIR=%{_bindir}
+	%__chmod +x prepare
+	./prepare BINDIR=%{_bindir}
 	%__make %{?jobs:-j%{jobs}}
 popd
 

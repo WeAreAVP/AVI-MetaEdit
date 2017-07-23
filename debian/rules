@@ -15,13 +15,13 @@ configure-stamp:
 	cd Project/GNU/CLI && ./autogen
 	cd Project/GNU/CLI && ./configure --prefix=/usr
 
-	cd Project/QtCreator && qmake PREFIX=/usr
+	cd Project/QtCreator && ./prepare BINDIR=/usr/bin
 
 	touch $@
 
 
 build: build-stamp
-build-stamp: configure-stamp  
+build-stamp: configure-stamp
 	dh_testdir
 
 	# Add here commands to compile the package.
@@ -98,7 +98,8 @@ binary-arch: build install
 #	dh_installinfo
 	dh_installman
 	dh_link
-	dh_strip
+	dh_strip -p avimetaedit --dbg-package=avimetaedit-dbg
+	dh_strip -p avimetaedit-gui --dbg-package=avimetaedit-gui-dbg
 	dh_compress
 	dh_fixperms
 #	dh_perl

@@ -1,6 +1,6 @@
 Format: 1.0
 Source: avimetaedit
-Binary: avimetaedit, avimetaedit-gui
+Binary: avimetaedit, avimetaedit-dbg, avimetaedit-gui, avimetaedit-gui-dbg
 Architecture: any
 Version: 1.0.0-1
 Maintainer: Jerome Martinez <info@mediaarea.net>
