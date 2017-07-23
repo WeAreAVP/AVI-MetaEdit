@@ -6,6 +6,25 @@ TARGET = "AVI MetaEdit"
 } else {
 TARGET = "avimetaedit-gui"
 }
+
+win32 {
+    RC_FILE = avimetaedit-gui.rc
+    contains(QT_ARCH, i386): DESTDIR = Win32
+    contains(QT_ARCH, x86_64): DESTDIR = x64
+}
+
+macx {
+    LIBS += -framework CoreFoundation
+    QMAKE_INFO_PLIST = ../Mac/Info.plist
+    ICON = ../Mac/Logo.icns
+}
+
+unix {
+    isEmpty(BINDIR): BINDIR = /usr/bin
+    target.path = $$BINDIR
+    INSTALLS += target
+}
+
 TEMPLATE = app
 
 CONFIG += qt release
@@ -143,9 +162,3 @@ RESOURCES += \
     ../../Source/Resource/GUI_Main.qrc
 
 INCLUDEPATH += $$PWD/../../Source
-
-macx:
-{
-    LIBS += -framework CoreFoundation
-    ICON = ../../Source/Resource/Image/Brand/Logo.icns
-}
