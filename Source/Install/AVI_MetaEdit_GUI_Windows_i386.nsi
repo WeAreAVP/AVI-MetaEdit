@@ -3,13 +3,14 @@ RequestExecutionLevel admin
 
 ; Some defines
 !define PRODUCT_NAME "AVI MetaEdit"
+!define PRODUCT_NAME_EXE "aviedit-gui.exe"
 !define PRODUCT_PUBLISHER "U.S. National Archives"
 !define PRODUCT_VERSION "1.0.0"
-!define PRODUCT_VERSION4 "1.0.0.0"
+!define PRODUCT_VERSION4 "${PRODUCT_VERSION}.0"
 !define PRODUCT_WEB_SITE "http://www.archives.gov/"
 !define COMPANY_REGISTRY "Software\U.S. National Archives"
 !define PRODUCT_REGISTRY "Software\U.S. National Archives\AVI MetaEdit"
-!define PRODUCT_DIR_REGKEY "Software\Microsoft\Windows\CurrentVersion\App Paths\AVI_MetaEdit.exe"
+!define PRODUCT_DIR_REGKEY "Software\Microsoft\Windows\CurrentVersion\App Paths\${PRODUCT_NAME_EXE}"
 !define PRODUCT_UNINST_KEY "Software\Microsoft\Windows\CurrentVersion\Uninstall\${PRODUCT_NAME}"
 !define PRODUCT_UNINST_ROOT_KEY "HKLM"
 
@@ -32,7 +33,7 @@ SetCompressor /FINAL /SOLID lzma
 ; Installer pages
 !insertmacro MUI_PAGE_DIRECTORY
 !insertmacro MUI_PAGE_INSTFILES
-; !define MUI_FINISHPAGE_RUN "$INSTDIR\aviedit-gui.exe" //Removing it because it is run in admin privileges
+!define MUI_FINISHPAGE_RUN "$INSTDIR\${PRODUCT_NAME_EXE}"
 !insertmacro MUI_PAGE_FINISH
 ; Uninstaller pages
 !insertmacro MUI_UNPAGE_WELCOME
@@ -59,7 +60,7 @@ BrandingText " "
 
 Name "${PRODUCT_NAME} ${PRODUCT_VERSION}"
 OutFile "..\..\Release\AVI_MetaEdit_GUI_${PRODUCT_VERSION}_Windows_i386.exe"
-InstallDir "$PROGRAMFILES\U.S. National Archives\AVI MetaEdit"
+InstallDir "$PROGRAMFILES\U.S. National Archives\${PRODUCT_NAME}"
 InstallDirRegKey HKLM "${PRODUCT_DIR_REGKEY}" ""
 ShowInstDetails nevershow
 ShowUnInstDetails nevershow
@@ -74,50 +75,43 @@ Function .onInit
 FunctionEnd
 
 Section "SectionPrincipale" SEC01
-  SetOverwrite ifnewer
+  SetOverwrite on
+
+  CreateShortCut "$SMPROGRAMS\${PRODUCT_NAME}.lnk" "$INSTDIR\${PRODUCT_NAME_EXE}" "" "" "" "" "" "${PRODUCT_NAME} ${PRODUCT_VERSION}"
   SetOutPath "$INSTDIR"
-  CreateDirectory "$SMPROGRAMS\AVI MetaEdit"
-  CreateShortCut "$SMPROGRAMS\AVI MetaEdit\AVI MetaEdit.lnk" "$INSTDIR\aviedit-gui.exe" "" "" "" "" "" "AVI MetaEdit ${PRODUCT_VERSION}"
-  File "/oname=aviedit-gui.exe" "..\..\Project\MSVC2010\GUI\Win32\Release\AVI_MetaEdit_GUI.exe"
-  File "..\..\..\MediaInfoLib\Project\MSVC2005\DLL\Win32\Release\MediaInfo.dll"
+  File "/oname=\${PRODUCT_NAME_EXE}" "..\..\Project\MSVC2015\GUI\Win32\Release\AVI_MetaEdit_GUI.exe"
   File "/oname=History.txt" "..\..\History_GUI.txt"
   File "..\..\License.html"
   File  "/oname=ReadMe.txt""..\..\Release\ReadMe_GUI_Windows.txt"
-SectionEnd
-
-Section -AdditionalIcons
-  SetOutPath $INSTDIR
   WriteIniStr "$INSTDIR\${PRODUCT_NAME}.url" "InternetShortcut" "URL" "${PRODUCT_WEB_SITE}"
-  CreateShortCut "$SMPROGRAMS\AVI MetaEdit\Website.lnk" "$INSTDIR\${PRODUCT_NAME}.url" "" "" "" "" "" "Website"
-  CreateShortCut "$SMPROGRAMS\AVI MetaEdit\Uninstall.lnk" "$INSTDIR\uninst.exe" "" "" "" "" "" "Uninstall MediaInfo"
-  CreateShortCut "$SMPROGRAMS\AVI MetaEdit\History.lnk" "$INSTDIR\History.txt" "" "" "" "" "" "History"
+
+  # Delete files that might be present from older installation
+  Delete "$SMPROGRAMS\${PRODUCT_NAME}\${PRODUCT_NAME}.lnk"
+  Delete "$SMPROGRAMS\${PRODUCT_NAME}\Uninstall.lnk"
+  Delete "$SMPROGRAMS\${PRODUCT_NAME}\Website.lnk"
+  Delete "$SMPROGRAMS\${PRODUCT_NAME}\History.lnk"
+  RMDir  "$SMPROGRAMS\${PRODUCT_NAME}"
 SectionEnd
 
 Section -Post
   WriteUninstaller "$INSTDIR\uninst.exe"
-  WriteRegStr HKLM "${PRODUCT_DIR_REGKEY}" "" "$INSTDIR\MediaInfo.exe"
+  WriteRegStr HKLM "${PRODUCT_DIR_REGKEY}" "" "$INSTDIR\${PRODUCT_NAME}.exe"
   WriteRegStr ${PRODUCT_UNINST_ROOT_KEY} "${PRODUCT_UNINST_KEY}" "DisplayName" "$(^Name)"
   WriteRegStr ${PRODUCT_UNINST_ROOT_KEY} "${PRODUCT_UNINST_KEY}" "Publisher" "${PRODUCT_PUBLISHER}"
   WriteRegStr ${PRODUCT_UNINST_ROOT_KEY} "${PRODUCT_UNINST_KEY}" "UninstallString" "$INSTDIR\uninst.exe"
-  WriteRegStr ${PRODUCT_UNINST_ROOT_KEY} "${PRODUCT_UNINST_KEY}" "DisplayIcon" "$INSTDIR\MediaInfo.exe"
+  WriteRegStr ${PRODUCT_UNINST_ROOT_KEY} "${PRODUCT_UNINST_KEY}" "DisplayIcon" "$INSTDIR\\${PRODUCT_NAME_EXE}"
   WriteRegStr ${PRODUCT_UNINST_ROOT_KEY} "${PRODUCT_UNINST_KEY}" "DisplayVersion" "${PRODUCT_VERSION}"
   WriteRegStr ${PRODUCT_UNINST_ROOT_KEY} "${PRODUCT_UNINST_KEY}" "URLInfoAbout" "${PRODUCT_WEB_SITE}"
 SectionEnd
 
-
 Section Uninstall
   Delete "$INSTDIR\${PRODUCT_NAME}.url"
   Delete "$INSTDIR\uninst.exe"
-  Delete "$INSTDIR\aviedit-gui.exe"
+  Delete "$INSTDIR\${PRODUCT_NAME_EXE}"
   Delete "$INSTDIR\History.txt"
   Delete "$INSTDIR\License.html"
   Delete "$INSTDIR\ReadMe.txt"
-  Delete "$SMPROGRAMS\AVI MetaEdit\Uninstall.lnk"
-  Delete "$SMPROGRAMS\AVI MetaEdit\Website.lnk"
-  Delete "$SMPROGRAMS\AVI MetaEdit\AVI MetaEdit.lnk"
-  Delete "$SMPROGRAMS\AVI MetaEdit\History.lnk"
-
-  RMDir "$SMPROGRAMS\AVI MetaEdit"
+  Delete "$SMPROGRAMS\${PRODUCT_NAME}.lnk"
   RMDir "$INSTDIR"
 
   DeleteRegKey HKLM "${PRODUCT_REGISTRY}"
