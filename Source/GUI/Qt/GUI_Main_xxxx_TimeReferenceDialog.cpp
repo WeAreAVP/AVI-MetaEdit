@@ -15,7 +15,7 @@
 #include <QTimeEdit>
 #include <QLabel>
 #include <QLineEdit>
-#include <QtCore/QEvent>
+#include <QEvent>
 #include <QGridLayout>
 #include <QDialogButtonBox>
 #include <QIcon>

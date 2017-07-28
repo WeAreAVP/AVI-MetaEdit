@@ -19,9 +19,9 @@
 #include <QProgressDialog>
 #include <QApplication>
 #include <QListWidget>
-#include <QtCore/QThread>
-#include <QtCore/QUrl>
-#include <QtCore/QEvent>
+#include <QThread>
+#include <QUrl>
+#include <QEvent>
 #include "GUI/Qt/GUI_Preferences.h"
 #include "GUI/Qt/GUI_Help.h"
 #include "GUI/Qt/GUI_About.h"

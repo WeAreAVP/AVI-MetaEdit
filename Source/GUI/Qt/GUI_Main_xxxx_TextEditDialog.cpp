@@ -13,7 +13,7 @@
 #include "ZenLib/Ztring.h"
 #include "ZenLib/File.h"
 #include <QLabel>
-#include <QtCore/QEvent>
+#include <QEvent>
 #include <QFont>
 #include <QVBoxLayout>
 #include <QPushButton>

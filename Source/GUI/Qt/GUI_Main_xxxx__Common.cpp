@@ -19,14 +19,14 @@
 #include "Common/Common_About.h"
 #include "ZenLib/ZtringListList.h"
 #include <QLabel>
-#include <QtCore/QEvent>
+#include <QEvent>
 #include <QFont>
 #include <QTextEdit>
 #include <QDateEdit>
 #include <QSpinBox>
 #include <QItemDelegate>
 #include <QStandardItemModel>
-#include <QtCore/QDate>
+#include <QDate>
 #include <QContextMenuEvent>
 #include <QAction>
 #include <QMenu>

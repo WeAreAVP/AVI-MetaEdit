@@ -1,0 +1,61 @@
+# $Id$
+# Maintainer: MediaArea.net SARL <info@mediaarea.net>
+
+pkgname=('avimetaedit' 'avimetaedit-gui')
+pkgver=1.0.0
+pkgrel=1
+pkgdesc="Supplies technical and tag information about a video or audio file"
+url="http://mediaarea.net"
+license=('GPL')
+source=(${pkgname}_${pkgver}-1.tar.gz)
+md5sums=('00000000000000000000000000000000')
+arch=('i686' 'x86_64')
+makedepends=('qt5-base' 'qt5-tools' 'ca-certificates')
+
+prepare() {
+    cd "${srcdir}"/avimetaedit/Project/GNU/CLI
+    sh ./autogen
+    ./configure --prefix=/usr
+
+    cd "${srcdir}"/avimetaedit/Project/QtCreator
+    sh ./prepare BINDIR=/usr/bin
+}
+
+build() {
+    cd "${srcdir}"/avimetaedit/Project/GNU/CLI
+    make
+
+    cd "${srcdir}"/avimetaedit/Project/QtCreator
+    make
+}
+
+package_avimetaedit() {
+    pkgdesc="${pkgdesc} (CLI)"
+
+    cd "${srcdir}"/avimetaedit/Project/GNU/CLI
+    make DESTDIR="${pkgdir}" install
+
+    install -D -m 0644 "${srcdir}"/avimetaedit/License.html "${pkgdir}"/usr/share/licenses/${pkgname}/License.html
+    install -D -m 0644 "${srcdir}"/avimetaedit/History_CLI.txt "${pkgdir}"/usr/share/doc/${pkgname}/History.txt
+    install -D -m 0644 "${srcdir}"/avimetaedit/Release/ReadMe_CLI_Linux.txt "${pkgdir}"/usr/share/doc/${pkgname}/ReadMe.txt
+    install -D -m 0644 "${srcdir}"/avimetaedit/conformance_point_document.xsd "${pkgdir}"/usr/share/doc/${pkgname}/conformance_point_document.xsd
+}
+
+package_avimetaedit-gui() {
+    pkgdesc="${pkgdesc} (GUI)"
+    depends=('qt5-base')
+
+    cd "${srcdir}"/avimetaedit/Project/QtCreator
+    make INSTALL_ROOT="${pkgdir}" install
+
+    install -D -m 0644 "${srcdir}"/avimetaedit/License.html "${pkgdir}"/usr/share/licenses/${pkgname}/License.html
+    install -D -m 0644 "${srcdir}"/avimetaedit/History_GUI.txt "${pkgdir}"/usr/share/doc/${pkgname}/History.txt
+    install -D -m 0644 "${srcdir}"/avimetaedit/Release/ReadMe_GUI_Linux.txt "${pkgdir}"/usr/share/doc/${pkgname}/ReadMe.txt
+    install -D -m 0644 "${srcdir}"/avimetaedit/conformance_point_document.xsd "${pkgdir}"/usr/share/doc/${pkgname}/conformance_point_document.xsd
+
+    install -D -m 0644 "${srcdir}"/avimetaedit/Source/Resource/Image/Brand/Logo128.png "${pkgdir}"/usr/share/icons/hicolor/128x128/apps/avimetaedit-gui.png
+    install -D -m 0644 "${srcdir}"/avimetaedit/Source/Resource/Image/Brand/Logo.png "${pkgdir}"/usr/share/pixmaps/avimetaedit-gui.png
+    install -D -m 0644 "${srcdir}"/avimetaedit/Project/GNU/GUI/avimetaedit-gui.desktop "${pkgdir}"/usr/share/applications/avimetaedit-gui.desktop
+    install -D -m 0644 "${srcdir}"/avimetaedit/Project/GNU/GUI/avimetaedit-gui.kde3.desktop "${pkgdir}"/usr/share/apps/konqueror/servicemenus/avimetaedit-gui.desktop
+    install -D -m 0644 "${srcdir}"/avimetaedit/Project/GNU/GUI/avimetaedit-gui.kde4.desktop "${pkgdir}"/usr/share/kde4/services/ServiceMenus/avimetaedit-gui.desktop
+}

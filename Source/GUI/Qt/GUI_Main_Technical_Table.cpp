@@ -14,7 +14,7 @@
 #include "Common/Core.h"
 #include "ZenLib/ZtringListList.h"
 #include <QLabel>
-#include <QtCore/QEvent>
+#include <QEvent>
 #include <QFont>
 #include <QTextEdit>
 #include <QHeaderView>

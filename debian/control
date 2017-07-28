@@ -1,7 +1,7 @@
 Source: avimetaedit
 Priority: optional
 Maintainer: Jerome Martinez <info@mediaarea.net>
-Build-Depends: debhelper (>= 5), tofrodos, libqt4-dev, pkg-config, automake, autoconf, libtool
+Build-Depends: debhelper (>= 5), tofrodos, qtbase5-dev, qt5-default, zlib1g-dev, pkg-config, automake, autoconf, libtool
 Standards-Version: 3.7.3
 Section: libs
 Homepage: http://mediaarea.net
@@ -9,17 +9,39 @@ Homepage: http://mediaarea.net
 Package: avimetaedit
 Section: utils
 Architecture: any
-Depends: 
+Depends: ${shlibs:Depends}
 Description: AVI MetaEdit provides:
  .
  (To be filled)
 
+Package: avimetaedit-dbg
+Section: debug
+Architecture: any
+Priority: extra
+Depends: avimetaedit (= ${binary:Version})
+Description: AVI MetaEdit provides:
+ .
+ (To be filled)
+ .
+ This package contains the debugging symbols.
+
 Package: avimetaedit-gui
 Section: utils
 Architecture: any
-Depends: libqt4-gui
+Depends: ${shlibs:Depends}
 Description: AVI MetaEdit provides:
  .
  (To be filled)
  .
  This package contains the graphical user interface
+
+Package: avimetaedit-gui-dbg
+Section: debug
+Architecture: any
+Priority: extra
+Depends: avimetaedit-gui (= ${binary:Version})
+Description: AVI MetaEdit provides:
+ .
+ (To be filled)
+ .
+ This package contains the debugging symbols of the graphical user interface.

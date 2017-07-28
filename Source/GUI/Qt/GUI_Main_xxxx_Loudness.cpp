@@ -14,7 +14,7 @@
 #include "ZenLib/Ztring.h"
 #include "ZenLib/File.h"
 #include <QLabel>
-#include <QtCore/QEvent>
+#include <QEvent>
 #include <QDoubleSpinBox>
 #include <QGridLayout>
 #include <QDialogButtonBox>

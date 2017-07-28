@@ -20,7 +20,7 @@ BEGIN
             VALUE "CompanyName", "U.S. National Archives"
             VALUE "FileDescription", "AVI MetaEdit"
             VALUE "FileVersion", "1,1,1,0"
-            VALUE "InternalName", "AVI_MetaEdit - CLI - MSVC 2010"
+            VALUE "InternalName", "AVI_MetaEdit - CLI - MSVC 2015"
             VALUE "LegalCopyright", "BSD License"
             VALUE "OriginalFilename", "AVI_MetaEdit.exe"
             VALUE "ProductName", "AVI_MetaEdit_GUI"
