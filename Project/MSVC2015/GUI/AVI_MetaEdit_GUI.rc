@@ -20,10 +20,10 @@ BEGIN
             VALUE "CompanyName", "http://www.digitizationguidelines.gov"
             VALUE "FileDescription", "AVI MetaEdit"
             VALUE "FileVersion", "1,1,1,0"
-            VALUE "InternalName", "AVI_MetaEdit - GUI - MSVC 2015"
+            VALUE "InternalName", "AVI MetaEdit - GUI - MSVC 2015"
             VALUE "LegalCopyright", "BSD License"
-            VALUE "OriginalFilename", "AVI_MetaEdit.exe"
-            VALUE "ProductName", "AVI_MetaEdit_GUI"
+            VALUE "OriginalFilename", "AVI MetaEdit.exe"
+            VALUE "ProductName", "AVI MetaEdit GUI"
             VALUE "ProductVersion", "1,1,1,0"
         END
     END

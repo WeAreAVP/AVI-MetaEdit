@@ -3,7 +3,7 @@ RequestExecutionLevel admin
 
 ; Some defines
 !define PRODUCT_NAME "AVI MetaEdit"
-!define PRODUCT_NAME_EXE "aviedit-gui.exe"
+!define PRODUCT_NAME_EXE "${PRODUCT_NAME}.exe"
 !define PRODUCT_PUBLISHER "U.S. National Archives"
 !define PRODUCT_VERSION "1.0.0"
 !define PRODUCT_VERSION4 "${PRODUCT_VERSION}.0"
@@ -33,7 +33,7 @@ SetCompressor /FINAL /SOLID lzma
 ; Installer pages
 !insertmacro MUI_PAGE_DIRECTORY
 !insertmacro MUI_PAGE_INSTFILES
-!define MUI_FINISHPAGE_RUN "$INSTDIR\${PRODUCT_NAME_EXE}"
+!define MUI_WELCOMEFINISHPAGE_BITMAP "..\..\Source\Resource\Image\Windows_Finish.bmp"
 !insertmacro MUI_PAGE_FINISH
 ; Uninstaller pages
 !insertmacro MUI_UNPAGE_WELCOME
@@ -59,8 +59,8 @@ BrandingText " "
 ; Modern UI end
 
 Name "${PRODUCT_NAME} ${PRODUCT_VERSION}"
-OutFile "..\..\Release\AVI_MetaEdit_GUI_${PRODUCT_VERSION}_Windows_i386.exe"
-InstallDir "$PROGRAMFILES\U.S. National Archives\${PRODUCT_NAME}"
+OutFile "..\..\Release\AVIMetaEdit_GUI_${PRODUCT_VERSION}_Windows_i386.exe"
+InstallDir "$PROGRAMFILES\${PRODUCT_NAME}"
 InstallDirRegKey HKLM "${PRODUCT_DIR_REGKEY}" ""
 ShowInstDetails nevershow
 ShowUnInstDetails nevershow
@@ -85,12 +85,21 @@ Section "SectionPrincipale" SEC01
   File  "/oname=ReadMe.txt""..\..\Release\ReadMe_GUI_Windows.txt"
   WriteIniStr "$INSTDIR\${PRODUCT_NAME}.url" "InternetShortcut" "URL" "${PRODUCT_WEB_SITE}"
 
-  # Delete files that might be present from older installation
+  ; Delete files that might be present from older installation
+  DeleteRegKey HKLM "Software\Microsoft\Windows\CurrentVersion\App Paths\AVI_MetaEdit.exe"
   Delete "$SMPROGRAMS\${PRODUCT_NAME}\${PRODUCT_NAME}.lnk"
   Delete "$SMPROGRAMS\${PRODUCT_NAME}\Uninstall.lnk"
   Delete "$SMPROGRAMS\${PRODUCT_NAME}\Website.lnk"
   Delete "$SMPROGRAMS\${PRODUCT_NAME}\History.lnk"
   RMDir  "$SMPROGRAMS\${PRODUCT_NAME}"
+  Delete "$PROGRAMFILES\U.S. National Archives\AVI MetaEdit\AVI MetaEdit.url"
+  Delete "$PROGRAMFILES\U.S. National Archives\AVI MetaEdit\aviedit-gui.exe"
+  Delete "$PROGRAMFILES\U.S. National Archives\AVI MetaEdit\uninst.exe"
+  Delete "$PROGRAMFILES\U.S. National Archives\AVI MetaEdit\License.html"
+  Delete "$PROGRAMFILES\U.S. National Archives\AVI MetaEdit\History.txt"
+  Delete "$PROGRAMFILES\U.S. National Archives\AVI MetaEdit\ReadMe.txt"
+  RMDir "$PROGRAMFILES\U.S. National Archives\AVI MetaEdit"
+  RMDir "$PROGRAMFILES\U.S. National Archives" ; only if empty
 SectionEnd
 
 Section -Post
