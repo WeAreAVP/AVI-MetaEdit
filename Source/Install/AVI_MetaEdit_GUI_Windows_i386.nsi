@@ -66,12 +66,12 @@ ShowInstDetails nevershow
 ShowUnInstDetails nevershow
 
 Function .onInit
-  ;${If} ${RunningX64}
-  ;  MessageBox MB_YESNO|MB_ICONQUESTION|MB_DEFBUTTON2 'You are trying to install the 32-bit version of ${PRODUCT_NAME} on 64-bit Windows.$\r$\nPlease download and use the 64-bit version instead.$\r$\nContinue with the installation of the 32-bit version?' IDYES noprob
-  ;Quit
-  ;noprob:
-  ;${Else}
-  ;${EndIf}
+    SetRegView 64
+    MessageBox MB_YESNO|MB_ICONQUESTION|MB_DEFBUTTON2 'You are trying to install the 32-bit version of ${PRODUCT_NAME} on 64-bit Windows.$\r$\nPlease download and use the 64-bit version instead.$\r$\nContinue with the installation of the 32-bit version?' IDYES noprob
+  Quit
+  noprob:
+  ${Else}
+  ${EndIf}
 FunctionEnd
 
 Section "SectionPrincipale" SEC01
@@ -123,6 +123,7 @@ Section Uninstall
   Delete "$SMPROGRAMS\${PRODUCT_NAME}.lnk"
   RMDir "$INSTDIR"
 
+  SetRegView 64
   DeleteRegKey HKLM "${PRODUCT_REGISTRY}"
   DeleteRegKey /ifempty HKLM "${COMPANY_REGISTRY}"
   DeleteRegKey HKCU "${PRODUCT_REGISTRY}"

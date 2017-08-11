@@ -114,6 +114,7 @@ Section -Post
 SectionEnd
 
 Section Uninstall
+  SetRegView 64
   Delete "$INSTDIR\${PRODUCT_NAME}.url"
   Delete "$INSTDIR\uninst.exe"
   Delete "$INSTDIR\${PRODUCT_NAME_EXE}"
