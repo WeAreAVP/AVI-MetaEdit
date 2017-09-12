@@ -51,17 +51,17 @@ Ztring Duration_Duration3(int64s MS)
     HH=MS/1000/60/60; //h
     if (HH>0)
     {
-        DurationString1+=Ztring::ToZtring(HH)+_T("h");
-        DurationString2+=Ztring::ToZtring(HH)+_T("h");
+        DurationString1+=Ztring::ToZtring(HH)+__T("h");
+        DurationString2+=Ztring::ToZtring(HH)+__T("h");
         if (HH<10)
-            DurationString3+=Ztring(_T("0"))+Ztring::ToZtring(HH)+_T(":");
+            DurationString3+=Ztring(__T("0"))+Ztring::ToZtring(HH)+__T(":");
         else
-            DurationString3+=Ztring::ToZtring(HH)+_T(":");
+            DurationString3+=Ztring::ToZtring(HH)+__T(":");
         MS-=HH*60*60*1000;
     }
     else
     {
-        DurationString3+=_T("00:");
+        DurationString3+=__T("00:");
     }
 
     //Minutes
@@ -69,23 +69,23 @@ Ztring Duration_Duration3(int64s MS)
     if (MM>0 || HH>0)
     {
         if (DurationString1.size()>0)
-            DurationString1+=_T(" ");
-        DurationString1+=Ztring::ToZtring(MM)+_T("mn");
+            DurationString1+=__T(" ");
+        DurationString1+=Ztring::ToZtring(MM)+__T("mn");
         if (DurationString2.size()<5)
         {
             if (DurationString2.size()>0)
-                DurationString2+=_T(" ");
-            DurationString2+=Ztring::ToZtring(MM)+_T("mn");
+                DurationString2+=__T(" ");
+            DurationString2+=Ztring::ToZtring(MM)+__T("mn");
         }
         if (MM<10)
-            DurationString3+=Ztring(_T("0"))+Ztring::ToZtring(MM)+_T(":");
+            DurationString3+=Ztring(__T("0"))+Ztring::ToZtring(MM)+__T(":");
         else
-            DurationString3+=Ztring::ToZtring(MM)+_T(":");
+            DurationString3+=Ztring::ToZtring(MM)+__T(":");
         MS-=MM*60*1000;
     }
     else
     {
-        DurationString3+=_T("00:");
+        DurationString3+=__T("00:");
     }
 
     //Seconds
@@ -93,56 +93,56 @@ Ztring Duration_Duration3(int64s MS)
     if (SS>0 || MM>0 || HH>0)
     {
         if (DurationString1.size()>0)
-            DurationString1+=_T(" ");
-        DurationString1+=Ztring::ToZtring(SS)+_T("s");
+            DurationString1+=__T(" ");
+        DurationString1+=Ztring::ToZtring(SS)+__T("s");
         if (DurationString2.size()<5)
         {
             if (DurationString2.size()>0)
-                DurationString2+=_T(" ");
-            DurationString2+=Ztring::ToZtring(SS)+_T("s");
+                DurationString2+=__T(" ");
+            DurationString2+=Ztring::ToZtring(SS)+__T("s");
         }
         else if (DurationString2.size()==0)
-            DurationString2+=Ztring::ToZtring(SS)+_T("s");
+            DurationString2+=Ztring::ToZtring(SS)+__T("s");
         if (SS<10)
-            DurationString3+=Ztring(_T("0"))+Ztring::ToZtring(SS)+_T(".");
+            DurationString3+=Ztring(__T("0"))+Ztring::ToZtring(SS)+__T(".");
         else
-            DurationString3+=Ztring::ToZtring(SS)+_T(".");
+            DurationString3+=Ztring::ToZtring(SS)+__T(".");
         MS-=SS*1000;
     }
     else
     {
-        DurationString3+=_T("00.");
+        DurationString3+=__T("00.");
     }
 
     //Milliseconds
     if (MS>0 || SS>0 || MM>0 || HH>0)
     {
         if (DurationString1.size()>0)
-            DurationString1+=_T(" ");
-        DurationString1+=Ztring::ToZtring(MS)+_T("ms");
+            DurationString1+=__T(" ");
+        DurationString1+=Ztring::ToZtring(MS)+__T("ms");
         if (DurationString2.size()<5)
         {
             if (DurationString2.size()>0)
-                DurationString2+=_T(" ");
-            DurationString2+=Ztring::ToZtring(MS)+_T("ms");
+                DurationString2+=__T(" ");
+            DurationString2+=Ztring::ToZtring(MS)+__T("ms");
         }
         if (MS<10)
-            DurationString3+=Ztring(_T("00"))+Ztring::ToZtring(MS);
+            DurationString3+=Ztring(__T("00"))+Ztring::ToZtring(MS);
         else if (MS<100)
-            DurationString3+=Ztring(_T("0"))+Ztring::ToZtring(MS);
+            DurationString3+=Ztring(__T("0"))+Ztring::ToZtring(MS);
         else
             DurationString3+=Ztring::ToZtring(MS);
     }
     else
     {
-        DurationString3+=_T("000");
+        DurationString3+=__T("000");
     }
 
     if (Negative)
     {
-        DurationString1=Ztring(_T("-"))+DurationString1;
-        DurationString2=Ztring(_T("-"))+DurationString2;
-        DurationString3=Ztring(_T("-"))+DurationString3;
+        DurationString1=Ztring(__T("-"))+DurationString1;
+        DurationString2=Ztring(__T("-"))+DurationString2;
+        DurationString3=Ztring(__T("-"))+DurationString3;
     }
 
     return DurationString3;
@@ -151,7 +151,7 @@ Ztring Duration_Duration3(int64s MS)
 //---------------------------------------------------------------------------
 void MediaInfo_Config_CodecID_Video_Riff (InfoMap &Info)
 {
-    Info.Separator_Set(0, _T("\n"));
+    Info.Separator_Set(0, __T("\n"));
     Info.Write(Ztring().From_UTF8(
     "0x00000000;RGB;;Basic Windows bitmap format. 1, 4 and 8 bpp versions are palettised. 16, 24 and 32bpp contain raw RGB samples;http://www.fourcc.org/indexrgb.htm;;;;\n"
     "0x00000001;RLE;;Run length encoded 8bpp RGB image;http://www.fourcc.org/indexrgb.htm;;;;\n"
@@ -867,7 +867,7 @@ void MediaInfo_Config_CodecID_Video_Riff (InfoMap &Info)
 //---------------------------------------------------------------------------
 void MediaInfo_Config_CodecID_Audio_Riff (InfoMap &Info)
 {
-    Info.Separator_Set(0, _T("\n"));
+    Info.Separator_Set(0, __T("\n"));
     Info.Write(Ztring().From_UTF8(
     "0;;;;\n"
     "1;PCM;;;http://www.microsoft.com/windows/\n"

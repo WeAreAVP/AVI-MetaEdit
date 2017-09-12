@@ -90,7 +90,7 @@ GUI_Main_xxxx_TimeReferenceDialog::GUI_Main_xxxx_TimeReferenceDialog(Core* _C, c
     {
         FrameCount=TimeReference.substr(9, string::npos);
         if (Field_!="ISMP")
-            DropFrame=TimeReference[8]==_T(';');
+            DropFrame=TimeReference[8]==__T(';');
         TimeReference.resize(8);
     }
     TimeEdit->setTime(QTime::fromString(QString().fromUtf8(TimeReference.To_Local().c_str()), Qt::ISODate));
@@ -122,7 +122,7 @@ void GUI_Main_xxxx_TimeReferenceDialog::OnAccept ()
         Value+=DropFrameEdit->isChecked()?';':':';
     Ztring FrameCount; FrameCount.From_Number(FrameEdit->value());
     if (FrameCount.size()==1)
-        FrameCount.insert(0, 1, _T('0'));
+        FrameCount.insert(0, 1, __T('0'));
     Value+=FrameCount;
     if (!C->IsValid(FileName, Field, Value))
     {

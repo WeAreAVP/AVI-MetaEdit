@@ -590,7 +590,7 @@ string Core::Menu_File_Undo_ListModifiedFiles(size_t Pos)
     //Showing
     ZtringListList List;
     List.Separator_Set(0, "\n");
-    List.Separator_Set(1, _T(","));
+    List.Separator_Set(1, __T(","));
     List.Write(ModifiedContent);
 
     //Elminating unuseful info from filenames
@@ -975,7 +975,7 @@ const string& Core::Core_Get ()
 
     ZtringListList List;
     List.Separator_Set(0, EOL);
-    List.Separator_Set(1, _T(","));
+    List.Separator_Set(1, __T(","));
     List.push_back(Riff_Handler::Core_Header());
 
     for (handlers::iterator Handler=Handlers.begin(); Handler!=Handlers.end(); Handler++)

@@ -37,7 +37,7 @@ void Riff_AVI__MD5_::Read_Internal ()
         while (MD5_PerItem.size()<32)
             MD5_PerItem.insert(MD5_PerItem.begin(), '0'); //Padding with 0, this must be a 32-byte string
         if (!MD5_Total.empty())
-            MD5_Total+=_T(" / ");
+            MD5_Total+=__T(" / ");
         MD5_PerItem.MakeLowerCase();
         MD5_Total+=MD5_PerItem;
     }
@@ -63,7 +63,7 @@ void Riff_AVI__MD5_::Modify_Internal ()
     }
 
     ZtringList Values;
-    Values.Separator_Set(0, _T(" / "));
+    Values.Separator_Set(0, __T(" / "));
     Values.Write(Global->MD5Stored->Strings["md5stored"]);
 
     //Creating buffer

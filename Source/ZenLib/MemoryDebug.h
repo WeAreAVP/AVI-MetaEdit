@@ -1,26 +1,12 @@
-// ZenLib::MemoryDebug - To debug memory leaks
-// Copyright (C) 2002-2010 MediaArea.net SARL, Info@MediaArea.net
-//
-// This software is provided 'as-is', without any express or implied
-// warranty.  In no event will the authors be held liable for any damages
-// arising from the use of this software.
-//
-// Permission is granted to anyone to use this software for any purpose,
-// including commercial applications, and to alter it and redistribute it
-// freely, subject to the following restrictions:
-//
-// 1. The origin of this software must not be misrepresented; you must not
-//    claim that you wrote the original software. If you use this software
-//    in a product, an acknowledgment in the product documentation would be
-//    appreciated but is not required.
-// 2. Altered source versions must be plainly marked as such, and must not be
-//    misrepresented as being the original software.
-// 3. This notice may not be removed or altered from any source distribution.
-//
+/*  Copyright (c) MediaArea.net SARL. All Rights Reserved.
+ *
+ *  Use of this source code is governed by a zlib-style license that can
+ *  be found in the License.txt file in the root of the source tree.
+ */
+
 //+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
-//+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+//
 // MemoryDebug
-//+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 //
 // Provide "new" and "delete" overloadings to be able to detect memory leaks
 // Based on http://loulou.developpez.com/tutoriels/moteur3d/partie1/ 2.2.1
@@ -37,6 +23,8 @@
 //---------------------------------------------------------------------------
 #include "ZenLib/Conf.h"
 #include <fstream>
+#include <sstream>
+#include <memory>
 #include <map>
 #include <stack>
 #include <string>
@@ -54,14 +42,15 @@ class MemoryDebug
 public :
     ~MemoryDebug();
     static MemoryDebug& Instance();
-
+    static bool g_IsShutdown;
     void* Allocate(std::size_t Size, const char* File, int Line, bool Array);
     void  Free(void* Ptr, bool Array);
     void  NextDelete(const char*, int Line); //Sauvegarde les infos sur la désallocation courante
 
+    void ReportLeaks();
+
 private :
     MemoryDebug();
-    void ReportLeaks();
     struct TBlock
     {
         std::size_t Size;  // Taille allouée
@@ -92,12 +81,18 @@ inline void* operator new[](std::size_t Size, const char* File, int Line)
 
 inline void operator delete(void* Ptr)
 {
-    ZenLib::MemoryDebug::Instance().Free(Ptr, false);
+    if (ZenLib::MemoryDebug::g_IsShutdown)
+        free(Ptr);
+    else
+        ZenLib::MemoryDebug::Instance().Free(Ptr, false);
 }
 
 inline void operator delete[](void* Ptr)
 {
-    ZenLib::MemoryDebug::Instance().Free(Ptr, true);
+    if (ZenLib::MemoryDebug::g_IsShutdown)
+        free(Ptr);
+    else
+        ZenLib::MemoryDebug::Instance().Free(Ptr, true);
 }
 
 #if !defined(__BORLANDC__) // Borland does not support overloaded delete
@@ -126,5 +121,3 @@ inline void operator delete[](void* Ptr, const char* File, int Line)
 #endif // defined(ZENLIB_DEBUG)
 
 #endif // ZenMemoryDebugH
-
-
