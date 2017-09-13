@@ -1,23 +1,9 @@
-// ZenLib::BitStream_LE - Read bit per bit, Little Endian version
-// Copyright (C) 2007-2010 MediaArea.net SARL, Info@MediaArea.net
-//
-// This software is provided 'as-is', without any express or implied
-// warranty.  In no event will the authors be held liable for any damages
-// arising from the use of this software.
-//
-// Permission is granted to anyone to use this software for any purpose,
-// including commercial applications, and to alter it and redistribute it
-// freely, subject to the following restrictions:
-//
-// 1. The origin of this software must not be misrepresented; you must not
-//    claim that you wrote the original software. If you use this software
-//    in a product, an acknowledgment in the product documentation would be
-//    appreciated but is not required.
-// 2. Altered source versions must be plainly marked as such, and must not be
-//    misrepresented as being the original software.
-// 3. This notice may not be removed or altered from any source distribution.
-//
-//+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+/*  Copyright (c) MediaArea.net SARL. All Rights Reserved.
+ *
+ *  Use of this source code is governed by a zlib-style license that can
+ *  be found in the License.txt file in the root of the source tree.
+ */
+
 //+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 //
 // Read a stream bit per bit, Little Endian version (rarely used!!!)
@@ -37,7 +23,7 @@
 namespace ZenLib
 {
 
-class BitStream_LE : BitStream
+class BitStream_LE : public BitStream
 {
 public:
     BitStream_LE ()                                                             :BitStream() {};
@@ -73,8 +59,11 @@ public:
         HowMany+=endbit;
 
         if(endbyte+4>=storage){
-        ret=-1L;
-        if(endbyte*8+(long)HowMany>storage*8)goto overflow;
+            ret=-1L;
+            if(endbyte*8+(long)HowMany>storage*8){
+                Attach(NULL, 0);
+                goto overflow;
+            }
         }
 
         ret=ptr[0]>>endbit;
@@ -92,11 +81,12 @@ public:
         }
         ret&=m;
 
-        overflow:
-
         ptr+=HowMany/8;
         endbyte+=(long)HowMany/8;
         endbit=(long)HowMany&7;
+
+        overflow:
+
         return(ret);
     };
 
@@ -107,7 +97,7 @@ public:
 
     int32u Remain () //How many bits remain?
     {
-        return 32;
+        return storage*8-(endbyte*8+endbit);
     };
 
     void Byte_Align()

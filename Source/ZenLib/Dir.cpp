@@ -1,31 +1,20 @@
-// ZenLib::Dir - Directories functions
-// Copyright (C) 2007-2010 MediaArea.net SARL, Info@MediaArea.net
-//
-// This software is provided 'as-is', without any express or implied
-// warranty.  In no event will the authors be held liable for any damages
-// arising from the use of this software.
-//
-// Permission is granted to anyone to use this software for any purpose,
-// including commercial applications, and to alter it and redistribute it
-// freely, subject to the following restrictions:
-//
-// 1. The origin of this software must not be misrepresented; you must not
-//    claim that you wrote the original software. If you use this software
-//    in a product, an acknowledgment in the product documentation would be
-//    appreciated but is not required.
-// 2. Altered source versions must be plainly marked as such, and must not be
-//    misrepresented as being the original software.
-// 3. This notice may not be removed or altered from any source distribution.
-//
-//+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
-//+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+/*  Copyright (c) MediaArea.net SARL. All Rights Reserved.
+ *
+ *  Use of this source code is governed by a zlib-style license that can
+ *  be found in the License.txt file in the root of the source tree.
+ */
 
 //---------------------------------------------------------------------------
-#include "ZenLib/Conf_Internal.h"
+#include "ZenLib/PreComp.h"
 #ifdef __BORLANDC__
     #pragma hdrstop
 #endif
 //---------------------------------------------------------------------------
+
+//---------------------------------------------------------------------------
+#include "ZenLib/Conf_Internal.h"
+//---------------------------------------------------------------------------
+
 //---------------------------------------------------------------------------
 #ifdef ZENLIB_USEWX
     #include <wx/file.h>
@@ -50,13 +39,102 @@
 #include "ZenLib/Dir.h"
 #include "ZenLib/File.h"
 #include "ZenLib/FileName.h"
-#include "ZenLib/ZtringList.h"
 #include "ZenLib/OS_Utils.h"
-#include <iostream>
 //---------------------------------------------------------------------------
 
 namespace ZenLib
 {
+
+//---------------------------------------------------------------------------
+// Debug
+#ifdef ZENLIB_DEBUG
+    #include <stdio.h>
+    #include <windows.h>
+    namespace ZenLib_Dir_Debug
+    {
+        FILE* F;
+        std::string Debug;
+        SYSTEMTIME st_In;
+
+        void Debug_Open(bool Out)
+        {
+            F=fopen("C:\\Temp\\ZenLib_Debug.txt", "a+t");
+            Debug.clear();
+            SYSTEMTIME st;
+            GetLocalTime( &st );
+
+            char Duration[100];
+            if (Out)
+            {
+                FILETIME ft_In;
+                if (SystemTimeToFileTime(&st_In, &ft_In))
+                {
+                    FILETIME ft_Out;
+                    if (SystemTimeToFileTime(&st, &ft_Out))
+                    {
+                        ULARGE_INTEGER UI_In;
+                        UI_In.HighPart=ft_In.dwHighDateTime;
+                        UI_In.LowPart=ft_In.dwLowDateTime;
+
+                        ULARGE_INTEGER UI_Out;
+                        UI_Out.HighPart=ft_Out.dwHighDateTime;
+                        UI_Out.LowPart=ft_Out.dwLowDateTime;
+
+                        ULARGE_INTEGER UI_Diff;
+                        UI_Diff.QuadPart=UI_Out.QuadPart-UI_In.QuadPart;
+
+                        FILETIME ft_Diff;
+                        ft_Diff.dwHighDateTime=UI_Diff.HighPart;
+                        ft_Diff.dwLowDateTime=UI_Diff.LowPart;
+
+                        SYSTEMTIME st_Diff;
+                        if (FileTimeToSystemTime(&ft_Diff, &st_Diff))
+                        {
+                            sprintf(Duration, "%02hd:%02hd:%02hd.%03hd", st_Diff.wHour, st_Diff.wMinute, st_Diff.wSecond, st_Diff.wMilliseconds);
+                        }
+                        else
+                            strcpy(Duration, "            ");
+                    }
+                    else
+                        strcpy(Duration, "            ");
+
+                }
+                else
+                    strcpy(Duration, "            ");
+            }
+            else
+            {
+                st_In=st;
+                strcpy(Duration, "            ");
+            }
+
+            fprintf(F,"                                       %02hd:%02hd:%02hd.%03hd %s", st.wHour, st.wMinute, st.wSecond, st.wMilliseconds, Duration);
+        }
+
+        void Debug_Close()
+        {
+            Debug += "\r\n";
+            fwrite(Debug.c_str(), Debug.size(), 1, F); \
+            fclose(F);
+        }
+    }
+    using namespace ZenLib_Dir_Debug;
+
+    #define ZENLIB_DEBUG1(_NAME,_TOAPPEND) \
+        Debug_Open(false); \
+        Debug+=", ";Debug+=_NAME; \
+        _TOAPPEND; \
+        Debug_Close();
+
+    #define ZENLIB_DEBUG2(_NAME,_TOAPPEND) \
+        Debug_Open(true); \
+        Debug+=", ";Debug+=_NAME; \
+        _TOAPPEND; \
+        Debug_Close();
+#else // ZENLIB_DEBUG
+    #define ZENLIB_DEBUG1(_NAME,_TOAPPEND)
+    #define ZENLIB_DEBUG2(_NAME,_TOAPPEND)
+#endif // ZENLIB_DEBUG
 
 //***************************************************************************
 // Constructor/Destructor
@@ -69,6 +147,9 @@ namespace ZenLib
 
 ZtringList Dir::GetAllFileNames(const Ztring &Dir_Name_, dirlist_t Options)
 {
+    ZENLIB_DEBUG1(     "Dir GetAllFileNames",
+                        Debug+=", Dir_Name="; Debug+=Ztring(Dir_Name_).To_UTF8(); Debug+=", Options="; Debug +=Ztring::ToZtring(Options).To_UTF8())
+
     ZtringList ToReturn;
     Ztring Dir_Name=Dir_Name_;
 
@@ -88,13 +169,13 @@ ZtringList Dir::GetAllFileNames(const Ztring &Dir_Name_, dirlist_t Options)
         else if (FullPath.DirExists())
         {
             FullPath.Normalize();
-            wxDir::GetAllFiles(FullPath.GetFullPath(), &Liste, _T(""), Flags);
+            wxDir::GetAllFiles(FullPath.GetFullPath(), &Liste, Ztring(), Flags);
         }
         //-WildCards
         else
         {
             wxString FileName=FullPath.GetFullName();
-            FullPath.SetFullName(_T("")); //Supress filename
+            FullPath.SetFullName(Ztring()); //Supress filename
             FullPath.Normalize();
             if (FullPath.DirExists())
                 wxDir::GetAllFiles(FullPath.GetPath(), &Liste, FileName, Flags);
@@ -108,82 +189,58 @@ ZtringList Dir::GetAllFileNames(const Ztring &Dir_Name_, dirlist_t Options)
         #ifdef WINDOWS
             //Is a dir?
             if (Exists(Dir_Name))
-                Dir_Name+=_T("\\*");
+                Dir_Name+=__T("\\*");
 
             //Path
             Ztring Path=FileName::Path_Get(Dir_Name);
             if (Path.empty())
             {
-                #ifdef UNICODE
-                    if (IsWin9X())
-                    {
-                        DWORD Path_Size=GetFullPathNameA(Dir_Name.To_Local().c_str(), 0, NULL, NULL);
-                        char* PathTemp=new char[Path_Size+1];
-                        if (GetFullPathNameA(Dir_Name.To_Local().c_str(), Path_Size+1, PathTemp, NULL))
-                            Path=FileName::Path_Get(PathTemp);
-                        delete [] PathTemp; //PathTemp=NULL;
-                    }
-                    else
-                    {
-                        DWORD Path_Size=GetFullPathName(Dir_Name.c_str(), 0, NULL, NULL);
-                        Char* PathTemp=new Char[Path_Size+1];
-                        if (GetFullPathNameW(Dir_Name.c_str(), Path_Size+1, PathTemp, NULL))
-                            Path=FileName::Path_Get(PathTemp);
-                        delete [] PathTemp; //PathTemp=NULL;
-                    }
-                #else
-                    DWORD Path_Size=GetFullPathName(Dir_Name.c_str(), 0, NULL, NULL);
-                    Char* PathTemp=new Char[Path_Size+1];
-                    if (GetFullPathName(Dir_Name.c_str(), Path_Size+1, PathTemp, NULL))
-                        Path=FileName::Path_Get(PathTemp);
-                    delete [] PathTemp; //PathTemp=NULL;
-                #endif //UNICODE
+                DWORD Path_Size=GetFullPathName(Dir_Name.c_str(), 0, NULL, NULL);
+                Char* PathTemp=new Char[Path_Size+1];
+                if (GetFullPathName(Dir_Name.c_str(), Path_Size+1, PathTemp, NULL))
+                    Path=FileName::Path_Get(PathTemp);
+                delete [] PathTemp;
             }
 
             #ifdef UNICODE
-                WIN32_FIND_DATAA FindFileDataA;
                 WIN32_FIND_DATAW FindFileDataW;
-                HANDLE hFind;
-                if (IsWin9X())
-                    hFind=FindFirstFileA(Dir_Name.To_Local().c_str(), &FindFileDataA);
-                else
-                    hFind=FindFirstFileW(Dir_Name.c_str(), &FindFileDataW);
+                HANDLE hFind=FindFirstFileW(Dir_Name.c_str(), &FindFileDataW);
             #else
                 WIN32_FIND_DATA FindFileData;
                 HANDLE hFind=FindFirstFile(Dir_Name.c_str(), &FindFileData);
             #endif //UNICODE
 
             if (hFind==INVALID_HANDLE_VALUE)
+            {
+                ZENLIB_DEBUG2(   "Dir GetAllFileNames",
+                                    Debug+=", returns with files count="; Debug +=Ztring::ToZtring(ToReturn.size()).To_UTF8())
+
                 return ZtringList();
+            }
 
             BOOL ReturnValue;
             do
             {
                 #ifdef UNICODE
-                    Ztring File_Name;
-                    if (IsWin9X())
-                        File_Name=FindFileDataA.cFileName;
-                    else
-                        File_Name=FindFileDataW.cFileName;
+                    Ztring File_Name(FindFileDataW.cFileName);
                 #else
                     Ztring File_Name(FindFileData.cFileName);
                 #endif //UNICODE
-                if (File_Name!=_T(".") && File_Name!=_T("..")) //Avoid . an ..
+                if (File_Name!=__T(".") && File_Name!=__T("..")) //Avoid . an ..
                 {
-                    Ztring File_Name_Complete=Path+_T("\\")+File_Name;
+                    Ztring File_Name_Complete=Path+__T("\\")+File_Name;
                     if (Exists(File_Name_Complete))
                     {
+                        if (Options&Include_Dirs)
+                            ToReturn.push_back(File_Name_Complete); //A dir
                         if (Options&Parse_SubDirs)
                             ToReturn+=GetAllFileNames(File_Name_Complete, Options); //A SubDir
                     }
-                    else if ((Options&Include_Hidden) || (!File_Name.empty() && File_Name[0]!=_T('.')))
+                    else if ((Options&Include_Files) && ((Options&Include_Hidden) || (!File_Name.empty() && File_Name[0]!=__T('.'))))
                         ToReturn.push_back(File_Name_Complete); //A file
                 }
                 #ifdef UNICODE
-                    if (IsWin9X())
-                        ReturnValue=FindNextFileA(hFind, &FindFileDataA);
-                    else
-                        ReturnValue=FindNextFileW(hFind, &FindFileDataW);
+                    ReturnValue=FindNextFileW(hFind, &FindFileDataW);
                 #else
                     ReturnValue=FindNextFile(hFind, &FindFileData);
                 #endif //UNICODE
@@ -193,37 +250,67 @@ ZtringList Dir::GetAllFileNames(const Ztring &Dir_Name_, dirlist_t Options)
             FindClose(hFind);
         #else //WINDOWS
             //A file?
-            if (Exists(Dir_Name))
+            if (File::Exists(Dir_Name))
             {
-                Dir_Name+=PathSeparator;
-                Dir_Name+=_T('*');
+               ToReturn.push_back(Dir_Name); //TODO
+               return ToReturn;
             }
 
             //A dir?
-            Ztring Path=FileName::Path_Get(Dir_Name);
-            if (!Dir::Exists(Path))
+            if (!Dir::Exists(Dir_Name))
                 return ToReturn; //Does not exist
 
             //open
-            glob_t globbuf;
-            if (glob(Dir_Name.To_Local().c_str(), GLOB_NOSORT, NULL, &globbuf)==0)
-                for (int Pos=0; Pos<globbuf.gl_pathc; Pos++)
+            #ifdef UNICODE
+                DIR* Dir=opendir(Dir_Name.To_Local().c_str());
+            #else
+                DIR* Dir=opendir(Dir_Name.c_str());
+            #endif //UNICODE
+            if (Dir)
+            {
+                //This is a dir
+                //Normalizing dir (the / at the end)
+                size_t Dir_Pos=Dir_Name.rfind(FileName_PathSeparator);
+                if (Dir_Pos==std::string::npos)
+                    Dir_Name+=FileName_PathSeparator;
+                else if (Dir_Pos+Ztring(FileName_PathSeparator).size()!=Dir_Name.size())
+                    Dir_Name+=FileName_PathSeparator;
+
+                struct dirent *DirEnt;
+                while((DirEnt=readdir(Dir))!=NULL)
                 {
-                    Ztring File_Name=Ztring().From_Local(globbuf.gl_pathv[Pos]);
-                    if (File_Name!=_T(".") && File_Name!=_T("..")) //Avoid . an ..
+                    //A file
+                    Ztring File_Name(DirEnt->d_name);
+                    if (File_Name!=__T(".") && File_Name!=__T("..")) //Avoid . an ..
                     {
-                        Ztring File_Name_Complete=File_Name;
+                        Ztring File_Name_Complete=Dir_Name+File_Name;
                         if (Exists(File_Name_Complete))
                         {
                             if (Options&Parse_SubDirs)
                                 ToReturn+=GetAllFileNames(File_Name_Complete, Options); //A SubDir
                         }
-                        else if ((Options&Include_Hidden) || (!File_Name.empty() && File_Name[0]!=_T('.')))
+                        else if ((Options&Include_Hidden) || (!File_Name.empty() && File_Name[0]!=__T('.')))
                             ToReturn.push_back(File_Name_Complete); //A file
                     }
                 }
+
+                //Close it
+                closedir(Dir);
+            }
+            else
+            {
+                glob_t globbuf;
+                if (glob(Dir_Name.To_Local().c_str(), GLOB_NOSORT, NULL, &globbuf)==0)
+                {
+                    for (size_t Pos=0; Pos<globbuf.gl_pathc; Pos++)
+                        ToReturn.push_back(Ztring().From_Local(globbuf.gl_pathv[Pos]));
+                }
+            }
         #endif
     #endif //ZENLIB_USEWX
+
+    ZENLIB_DEBUG2(   "Dir GetAllFileNames",
+                        Debug+=", files count="; Debug +=Ztring::ToZtring(ToReturn.size()).To_UTF8())
 
     return ToReturn;
 }
@@ -235,20 +322,23 @@ ZtringList Dir::GetAllFileNames(const Ztring &Dir_Name_, dirlist_t Options)
 //---------------------------------------------------------------------------
 bool Dir::Exists(const Ztring &File_Name)
 {
+    ZENLIB_DEBUG1(     "Dir Exists",
+                        Debug+=", Dir_Name="; Debug+=Ztring(File_Name).To_UTF8();)
+
     #ifdef ZENLIB_USEWX
         wxFileName FN(File_Name.c_str());
         return FN.DirExists();
     #else //ZENLIB_USEWX
        #ifdef WINDOWS
             #ifdef UNICODE
-                DWORD FileAttributes;
-                if (IsWin9X())
-                    FileAttributes=GetFileAttributesA(File_Name.To_Local().c_str());
-                else
-                    FileAttributes=GetFileAttributesW(File_Name.c_str());
+                DWORD FileAttributes=GetFileAttributesW(File_Name.c_str());
             #else
                 DWORD FileAttributes=GetFileAttributes(File_Name.c_str());
             #endif //UNICODE
+
+            ZENLIB_DEBUG2(   "Dir Exists",
+                                Debug+=", returns "; Debug +=Ztring::ToZtring(((FileAttributes!=INVALID_FILE_ATTRIBUTES) && (FileAttributes&FILE_ATTRIBUTE_DIRECTORY))?1:0).To_UTF8())
+
             return ((FileAttributes!=INVALID_FILE_ATTRIBUTES) && (FileAttributes&FILE_ATTRIBUTE_DIRECTORY));
         #else //WINDOWS
             struct stat buffer;
@@ -266,15 +356,20 @@ bool Dir::Exists(const Ztring &File_Name)
 //---------------------------------------------------------------------------
 bool Dir::Create(const Ztring &File_Name)
 {
+    Ztring Parent=FileName::Path_Get(File_Name);
+
+    if (Parent.length() && !Exists(Parent))
+    {
+        if (!Create(Parent))
+            return false;
+    }
+
     #ifdef ZENLIB_USEWX
         return wxFileName::Mkdir(File_Name.c_str());
     #else //ZENLIB_USEWX
         #ifdef WINDOWS
             #ifdef UNICODE
-                if (IsWin9X())
-                    return CreateDirectoryA(File_Name.To_Local().c_str(), NULL)!=0;
-                else
-                    return CreateDirectoryW(File_Name.c_str(), NULL)!=0;
+                return CreateDirectoryW(File_Name.c_str(), NULL)!=0;
             #else
                 return CreateDirectory(File_Name.c_str(), NULL)!=0;
             #endif //UNICODE
@@ -285,8 +380,162 @@ bool Dir::Create(const Ztring &File_Name)
 }
 
 //***************************************************************************
+// GetAllFileNames
+//***************************************************************************
+
+#ifdef WINDOWS
+class GetAllFileNames_Private
+{
+public:
+    Ztring Dir_Name;
+    Ztring Path;
+    Dir::dirlist_t Options;
+    HANDLE hFind;
+    #ifdef UNICODE
+        WIN32_FIND_DATAW FindFileDataW;
+    #else
+        WIN32_FIND_DATA FindFileData;
+    #endif //UNICODE
+
+    GetAllFileNames_Private()
+        : hFind(INVALID_HANDLE_VALUE)
+    {
+    }
+};
+
+//---------------------------------------------------------------------------
+GetAllFileNames::GetAllFileNames()
+    : p(NULL)
+{
+}
+
+//---------------------------------------------------------------------------
+GetAllFileNames::~GetAllFileNames()
+{
+    Close();
+}
+
+//---------------------------------------------------------------------------
+void GetAllFileNames::Start  (const Ztring &Dir_Name_, Dir::dirlist_t Options_)
+{
+    ZENLIB_DEBUG1(     "GetAllFileNames Start",
+                        Debug+=", Dir_Name="; Debug+=Ztring(Dir_Name_).To_UTF8(); Debug+=", Options="; Debug +=Ztring::ToZtring(Options_).To_UTF8())
+
+    delete p; p=new GetAllFileNames_Private;
+    p->Dir_Name=Dir_Name_;
+    p->Options=Options_;
+
+    #ifdef WINDOWS
+        //Is a dir?
+        if (Dir::Exists(p->Dir_Name))
+            p->Dir_Name+=__T("\\*");
+
+        //Path
+        p->Path=FileName::Path_Get(p->Dir_Name);
+        if (p->Path.empty())
+        {
+            DWORD Path_Size=GetFullPathName(p->Dir_Name.c_str(), 0, NULL, NULL);
+            Char* PathTemp=new Char[Path_Size+1];
+            if (GetFullPathName(p->Dir_Name.c_str(), Path_Size+1, PathTemp, NULL))
+                p->Path=FileName::Path_Get(PathTemp);
+            delete [] PathTemp;
+        }
+    #else //WINDOWS
+    #endif
+
+    ZENLIB_DEBUG2(   "GetAllFileNames Start",
+                        )
+}
+
+bool GetAllFileNames::Next (Ztring& Name)
+{
+    if (!p)
+        return false;
+
+    ZENLIB_DEBUG1(     "GetAllFileNames Next",
+                        Debug+=",  Dir_Name="; Debug+=Ztring(p->Dir_Name).To_UTF8())
+
+    #ifdef WINDOWS
+        for (;;)
+        {
+            if (p->hFind==INVALID_HANDLE_VALUE)
+            {
+                #ifdef UNICODE
+                    p->hFind=FindFirstFileW(p->Dir_Name.c_str(), &p->FindFileDataW);
+                #else
+                    p->hFind=FindFirstFile(p->Dir_Name.c_str(), &p->FindFileData);
+                #endif //UNICODE
+
+                if (p->hFind==INVALID_HANDLE_VALUE)
+                    break;
+            }
+            else
+            {
+                BOOL ReturnValue;
+                #ifdef UNICODE
+                    ReturnValue=FindNextFileW(p->hFind, &p->FindFileDataW);
+                #else
+                    ReturnValue=FindNextFile(p->hFind, &p->FindFileData);
+                #endif //UNICODE
+                if (!ReturnValue)
+                    break;
+            }
+
+            #ifdef UNICODE
+                Ztring File_Name(p->FindFileDataW.cFileName);
+            #else
+                Ztring File_Name(p->FindFileData.cFileName);
+            #endif //UNICODE
+            if (File_Name!=__T(".") && File_Name!=__T("..")) //Avoid . an ..
+            {
+                bool IsOk=false;
+                #ifdef UNICODE
+                    if (p->FindFileDataW.dwFileAttributes&FILE_ATTRIBUTE_DIRECTORY)
+                #else
+                    if (p->FindFileData.dwFileAttributes&FILE_ATTRIBUTE_DIRECTORY)
+                #endif //UNICODE
+                {
+                    if (p->Options&Dir::Include_Dirs)
+                        IsOk=true; //A dir
+                }
+                else if ((p->Options&Dir::Include_Files) && ((p->Options&Dir::Include_Hidden) || (!File_Name.empty() && File_Name[0]!=__T('.'))))
+                    IsOk=true; //A file
+                if (IsOk)
+                {
+                    Name=p->Path+__T("\\")+File_Name;
+
+                    ZENLIB_DEBUG2(   "GetAllFileNames Next",
+                                        Debug+=", File_Name="; Debug +=Name.To_UTF8())
+
+                    return true;
+                }
+            }
+        }
+    #else //WINDOWS
+    #endif
+
+    Close();
+    return false;
+}
+
+void GetAllFileNames::Close ()
+{
+    if (!p)
+        return;
+
+    ZENLIB_DEBUG1(     "GetAllFileNames Close",
+                        Debug+=", Dir_Name="; Debug+=Ztring(p->Dir_Name).To_UTF8())
+
+    FindClose(p->hFind); p->hFind=INVALID_HANDLE_VALUE;
+    delete p; p=NULL;
+
+    ZENLIB_DEBUG2(   "GetAllFileNames Close",
+                        )
+}
+#endif //WINDOWS
+
+//***************************************************************************
 //
 //***************************************************************************
 
 } //namespace
-

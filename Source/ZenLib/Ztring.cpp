@@ -1,23 +1,9 @@
-// ZenLib::Ztring - std::(w)string is better
-// Copyright (C) 2002-2010 MediaArea.net SARL, Info@MediaArea.net
-//
-// This software is provided 'as-is', without any express or implied
-// warranty.  In no event will the authors be held liable for any damages
-// arising from the use of this software.
-//
-// Permission is granted to anyone to use this software for any purpose,
-// including commercial applications, and to alter it and redistribute it
-// freely, subject to the following restrictions:
-//
-// 1. The origin of this software must not be misrepresented; you must not
-//    claim that you wrote the original software. If you use this software
-//    in a product, an acknowledgment in the product documentation would be
-//    appreciated but is not required.
-// 2. Altered source versions must be plainly marked as such, and must not be
-//    misrepresented as being the original software.
-// 3. This notice may not be removed or altered from any source distribution.
-//
-//+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+/*  Copyright (c) MediaArea.net SARL. All Rights Reserved.
+ *
+ *  Use of this source code is governed by a zlib-style license that can
+ *  be found in the License.txt file in the root of the source tree.
+ */
+
 //+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 //
 // More methods for std::(w)string
@@ -25,11 +11,16 @@
 //+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 
 //---------------------------------------------------------------------------
-#include "ZenLib/Conf_Internal.h"
+#include "ZenLib/PreComp.h"
 #ifdef __BORLANDC__
     #pragma hdrstop
 #endif
 //---------------------------------------------------------------------------
+
+//---------------------------------------------------------------------------
+#include "ZenLib/Conf_Internal.h"
+//---------------------------------------------------------------------------
+
 //---------------------------------------------------------------------------
 #ifdef ZENLIB_USEWX
     #include <wx/strconv.h>
@@ -47,18 +38,10 @@
 #ifdef __MINGW32__
     #include <windows.h>
 #endif //__MINGW32__
-#include <cstring>
-#include <cstdio>
-#include <cstdlib>
-#ifdef SS
-   #undef SS //Solaris defines this in cstdlib
-#endif
-#include <ctime>
 #include <algorithm>
-#include <sstream>
 #include <iomanip>
 #include <cmath>
-#include "ZenLib/Ztring.h"
+#include <ctime>
 #include "ZenLib/OS_Utils.h"
 #include "ZenLib/File.h"
 using namespace std;
@@ -67,21 +50,126 @@ using namespace std;
 namespace ZenLib
 {
 
+int16u Ztring_ISO_8859_2[96]=
+{
+    0x00A0,
+    0x0104,
+    0x02D8,
+    0x0141,
+    0x00A4,
+    0x013D,
+    0x015A,
+    0x00A7,
+    0x00A8,
+    0x0160,
+    0x015E,
+    0x0164,
+    0x0179,
+    0x00AD,
+    0x017D,
+    0x017B,
+    0x00B0,
+    0x0105,
+    0x02DB,
+    0x0142,
+    0x00B4,
+    0x013E,
+    0x015B,
+    0x02C7,
+    0x00B8,
+    0x0161,
+    0x015F,
+    0x0165,
+    0x017A,
+    0x02DD,
+    0x017E,
+    0x017C,
+    0x0154,
+    0x00C1,
+    0x00C2,
+    0x0102,
+    0x00C4,
+    0x0139,
+    0x0106,
+    0x00C7,
+    0x010C,
+    0x00C9,
+    0x0118,
+    0x00CB,
+    0x011A,
+    0x00CD,
+    0x00CE,
+    0x010E,
+    0x0110,
+    0x0143,
+    0x0147,
+    0x00D3,
+    0x00D4,
+    0x0150,
+    0x00D6,
+    0x00D7,
+    0x0158,
+    0x016E,
+    0x00DA,
+    0x0170,
+    0x00DC,
+    0x00DD,
+    0x0162,
+    0x00DF,
+    0x0155,
+    0x00E1,
+    0x00E2,
+    0x0103,
+    0x00E4,
+    0x013A,
+    0x0107,
+    0x00E7,
+    0x010D,
+    0x00E9,
+    0x0119,
+    0x00EB,
+    0x011B,
+    0x00ED,
+    0x00EE,
+    0x010F,
+    0x0111,
+    0x0144,
+    0x0148,
+    0x00F3,
+    0x00F4,
+    0x0151,
+    0x00F6,
+    0x00F7,
+    0x0159,
+    0x016F,
+    0x00FA,
+    0x0171,
+    0x00FC,
+    0x00FD,
+    0x0163,
+    0x02D9,
+};
+
 //---------------------------------------------------------------------------
 Ztring EmptyZtring;
 //---------------------------------------------------------------------------
 
 //---------------------------------------------------------------------------
-#if defined(__MINGW32__) || defined(__sun__) || defined(__mips__) || defined(__mipsel__)
+#if defined(STREAM_MISSING)
     #if defined (_UNICODE)
-        #define _tnprintf snwprintf
+        #if defined (MACOS) || defined (MACOSX)
+            #define _tnprintf swprintf
+        #else
+            #define _tnprintf snwprintf
+        #endif
     #else
         #define _tnprintf snprintf
     #endif
+#else
+    typedef basic_stringstream<Char>  tStringStream;
+    typedef basic_istringstream<Char> tiStringStream;
+    typedef basic_ostringstream<Char> toStringStream;
 #endif
-typedef basic_stringstream<Char>  tStringStream;
-typedef basic_istringstream<Char> tiStringStream;
-typedef basic_ostringstream<Char> toStringStream;
 //---------------------------------------------------------------------------
 
 //***************************************************************************
@@ -121,7 +209,10 @@ bool Ztring::Assign_FromFile (const Ztring &FileName)
         Buffer_Offset+=BytesRead;
     }
     if (Buffer_Offset<F_Size)
+    {
+        delete[] Buffer;
         return false;
+    }
     Buffer[Buffer_Offset]='\0';
 
     //Filling
@@ -134,6 +225,16 @@ bool Ztring::Assign_FromFile (const Ztring &FileName)
 //***************************************************************************
 // Conversions
 //***************************************************************************
+
+Ztring& Ztring::From_Unicode (const wchar_t S)
+{
+    #ifdef _UNICODE
+        append(1, S);
+    #else
+        From_Unicode(&S, 1);
+    #endif
+    return *this;
+}
 
 Ztring& Ztring::From_Unicode (const wchar_t* S)
 {
@@ -149,11 +250,6 @@ Ztring& Ztring::From_Unicode (const wchar_t* S)
                 assign(wxConvCurrent->cWC2MB(S));
         #else //ZENLIB_USEWX
             #ifdef WINDOWS
-                if (IsWin9X())
-                {
-                    clear();
-                    return *this; //Is not possible, UTF-8 is not supported by Win9X
-                }
                 int Size=WideCharToMultiByte(CP_UTF8, 0, S, -1, NULL, 0, NULL, NULL);
                 if (Size!=0)
                 {
@@ -192,7 +288,7 @@ Ztring& Ztring::From_Unicode (const wchar_t *S, size_type Start, size_type Lengt
         Length=wcslen(S+Start);
     wchar_t* Temp=new wchar_t[Length+1];
     wcsncpy (Temp, S+Start, Length);
-    Temp[Length]=_T('\0');
+    Temp[Length]=__T('\0');
 
     From_Unicode(Temp);
     delete[] Temp; //Temp=NULL;
@@ -214,96 +310,79 @@ Ztring& Ztring::From_UTF8 (const char* S)
             #endif
     #else //ZENLIB_USEWX
         #ifdef _UNICODE
-            #ifdef WINDOWS
-                if (IsWin9X())
+            // Don't use MultiByteToWideChar(), some characters are not well decoded
+            clear();
+            const int8u* Z=(const int8u*)S;
+            while (*Z) //0 is end
+            {
+                //1 byte
+                if (*Z<0x80)
                 {
-                    clear();
-                    const int8u* Z=(const int8u*)S;
-                    while (*Z) //0 is end
+                    operator += ((wchar_t)(*Z));
+                    Z++;
+                }
+                //2 bytes
+                else if ((*Z&0xE0)==0xC0)
+                {
+                    if ((*(Z+1)&0xC0)==0x80)
                     {
-                        //1 byte
-                        if (*Z<0x80)
+                        operator += ((((wchar_t)(*Z&0x1F))<<6)|(*(Z+1)&0x3F));
+                        Z+=2;
+                    }
+                    else
+                    {
+                        clear();
+                        return *this; //Bad character
+                    }
+                }
+                //3 bytes
+                else if ((*Z&0xF0)==0xE0)
+                {
+                    if ((*(Z+1)&0xC0)==0x80 && (*(Z+2)&0xC0)==0x80)
+                    {
+                        operator += ((((wchar_t)(*Z&0x0F))<<12)|((*(Z+1)&0x3F)<<6)|(*(Z+2)&0x3F));
+                        Z+=3;
+                    }
+                    else
+                    {
+                        clear();
+                        return *this; //Bad character
+                    }
+                }
+                //4 bytes
+                else if ((*Z&0xF8)==0xF0)
+                {
+                    if ((*(Z+1)&0xC0)==0x80 && (*(Z+2)&0xC0)==0x80 && (*(Z+3)&0xC0)==0x80)
+                    {
+                        #if defined(_MSC_VER)
+                            #pragma warning(push)
+                            #pragma warning(disable:4127)
+                        #endif //defined(_MSC_VER)
+                        if (sizeof(wchar_t) == 2)
+                        #if defined(_MSC_VER)
+                            #pragma warning(pop)
+                        #endif //defined(_MSC_VER)
                         {
-                            operator += ((wchar_t)(*Z));
-                            Z++;
-                        }
-                        //2 bytes
-                        else if ((*Z&0xE0)==0xC0)
-                        {
-                            if ((*(Z+1)&0xC0)==0x80)
-                            {
-                                operator += ((((wchar_t)(*Z&0x1F))<<6)|(*(Z+1)&0x3F));
-                                Z+=2;
-                            }
-                            else
-                                break; //Bad character
+                            int32u Value = ((((int32u)(*Z&0x0F))<<18)|((*(Z+1)&0x3F)<<12)|((*(Z+2)&0x3F)<<6)|(*(Z+3)&0x3F));
+                            operator += (0xD800|((Value>>10)-0x40));
+                            operator += (0xDC00| (Value&0x3FF));
                         }
                         else
-                            break; //Bad character (or to be encoded in UTF-16LE, not yet supported)
+                            operator += ((((wchar_t)(*Z&0x0F))<<18)|((*(Z+1)&0x3F)<<12)|((*(Z+2)&0x3F)<<6)|(*(Z+3)&0x3F));
+                        Z+=4;
+                    }
+                    else
+                    {
+                        clear();
+                        return *this; //Bad character
                     }
                 }
                 else
                 {
-                    int Size=MultiByteToWideChar(CP_UTF8, 0, S, -1, NULL, 0);
-                    if (Size!=0)
-                    {
-                        Char* WideString=new Char[Size+1];
-                        MultiByteToWideChar(CP_UTF8, MB_ERR_INVALID_CHARS, S, -1, WideString, Size);
-                        WideString[Size]=L'\0';
-                        assign (WideString+(WideString[0]==0xFEFF?1:0));
-                        delete[] WideString; //WideString=NULL;
-                    }
-                    else
-                        clear();
+                    clear();
+                    return *this; //Bad character
                 }
-            #else //WINDOWS
-                clear();
-                const int8u* Z=(const int8u*)S;
-                while (*Z) //0 is end
-                {
-                    //1 byte
-                    if (*Z<0x80)
-                    {
-                        operator += ((wchar_t)(*Z));
-                        Z++;
-                    }
-                    //2 bytes
-                    else if ((*Z&0xE0)==0xC0)
-                    {
-                        if ((*(Z+1)&0xC0)==0x80)
-                        {
-                            operator += ((((wchar_t)(*Z&0x1F))<<6)|(*(Z+1)&0x3F));
-                            Z+=2;
-                        }
-                        else
-                            break; //Bad character
-                    }
-                    //3 bytes
-                    else if ((*Z&0xF0)==0xE0)
-                    {
-                        if ((*(Z+1)&0xC0)==0x80 && (*(Z+2)&0xC0)==0x80)
-                        {
-                            operator += ((((wchar_t)(*Z&0x0F))<<12)|((*(Z+1)&0x3F)<<6)|(*(Z+2)&0x3F));
-                            Z+=3;
-                        }
-                        else
-                            break; //Bad character
-                    }
-                    //4 bytes
-                    else if ((*Z&0xF8)==0xF0)
-                    {
-                        if ((*(Z+1)&0xC0)==0x80 && (*(Z+2)&0xC0)==0x80 && (*(Z+2)&0xC0)==0x80)
-                        {
-                            operator += ((((wchar_t)(*Z&0x0F))<<18)|((*(Z+1)&0x3F)<<12)||((*(Z+2)&0x3F)<<6)|(*(Z+3)&0x3F));
-                            Z+=4;
-                        }
-                        else
-                            break; //Bad character
-                    }
-                    else
-                        break; //Bad character
-                }
-            #endif
+            }
         #else
             assign(S); //Not implemented
         #endif
@@ -386,7 +465,7 @@ Ztring& Ztring::From_UTF16BE (const char* S)
             clear();
             const wchar_t* SW=(const wchar_t*)S;
             size_t Pos=0;
-            while (SW[Pos]!=_T('\0'))
+            while (SW[Pos]!=__T('\0'))
             {
                 Char Temp=(Char)(((SW[Pos]&0xFF00)>>8)+((SW[Pos]&0x00FF)<<8));
                 append(1, Temp);
@@ -415,6 +494,8 @@ Ztring& Ztring::From_UTF16BE (const char* S, size_type Start, size_type Length)
         while(S[Length]!=0x0000)
             Length++;
     }
+    else
+        Length&=(size_t)-2; //odd number
 
     char* Temp=new char[Length+2];
     memcpy (Temp, S+Start, Length);
@@ -472,6 +553,8 @@ Ztring& Ztring::From_UTF16LE (const char* S, size_type Start, size_type Length)
         while(S[Length]!=0x0000)
             Length+=2;
     }
+    else
+        Length&=(size_t)-2; //odd number
 
     char* Temp=new char[Length+2];
     memcpy (Temp, S+Start, Length);
@@ -540,8 +623,81 @@ Ztring& Ztring::From_Local (const char* S, size_type Start, size_type Length)
         delete[] Temp; //Temp=NULL;
     #else
         assign(S+Start, Length);
-        if (find(_T('\0'))!=std::string::npos)
-            resize(find(_T('\0')));
+        if (find(__T('\0'))!=std::string::npos)
+            resize(find(__T('\0')));
+    #endif
+    return *this;
+}
+
+Ztring& Ztring::From_ISO_8859_1(const char* S)
+{
+    size_t Length = strlen(S);
+    wchar_t* Temp = new wchar_t[Length +1];
+
+    for (size_t Pos=0; Pos<Length+1; Pos++)
+        Temp[Pos]=(wchar_t)((int8u)S[Pos]);
+
+    From_Unicode(Temp);
+    delete[] Temp;
+    return *this;
+}
+
+Ztring& Ztring::From_ISO_8859_1(const char* S, size_type Start, size_type Length)
+{
+    if (S==NULL)
+        return *this;
+
+    if (Length==Error)
+        Length=strlen(S+Start);
+    #ifdef _UNICODE
+        char* Temp = new char[Length+1];
+        strncpy(Temp, S +Start, Length);
+        Temp[Length] = '\0';
+        From_ISO_8859_1(Temp);
+        delete[] Temp;
+    #else
+        assign(S +Start, Length);
+        if (find(__T('\0')) != std::string::npos)
+            resize(find(__T('\0')));
+    #endif
+    return *this;
+}
+
+Ztring& Ztring::From_ISO_8859_2(const char* S)
+{
+    size_t Length = strlen(S);
+    wchar_t* Temp = new wchar_t[Length +1];
+
+    for (size_t Pos=0; Pos<Length+1; Pos++)
+    {
+        if ((int8u)S[Pos]>=0xA0)
+            Temp[Pos]=(wchar_t)Ztring_ISO_8859_2[((int8u)S[Pos])-0xA0];
+        else
+            Temp[Pos]=(wchar_t)((int8u)S[Pos]);
+    }
+
+    From_Unicode(Temp);
+    delete[] Temp;
+    return *this;
+}
+
+Ztring& Ztring::From_ISO_8859_2(const char* S, size_type Start, size_type Length)
+{
+    if (S==NULL)
+        return *this;
+
+    if (Length==Error)
+        Length=strlen(S+Start);
+    #ifdef _UNICODE
+        char* Temp = new char[Length+1];
+        strncpy(Temp, S +Start, Length);
+        Temp[Length] = '\0';
+        From_ISO_8859_2(Temp);
+        delete[] Temp;
+    #else
+        assign(S +Start, Length);
+        if (find(__T('\0')) != std::string::npos)
+            resize(find(__T('\0')));
     #endif
     return *this;
 }
@@ -552,12 +708,12 @@ Ztring& Ztring::From_GUID (const int128u S)
     S1.From_CC1((int8u) ((S.hi&0x000000FF00000000LL)>>32)); append(S1);
     S1.From_CC1((int8u) ((S.hi&0x0000FF0000000000LL)>>40)); append(S1);
     S1.From_CC1((int8u) ((S.hi&0x00FF000000000000LL)>>48)); append(S1);
-    S1.From_CC1((int8u) ((S.hi&0xFF00000000000000LL)>>56)); append(S1); append(_T("-"));
+    S1.From_CC1((int8u) ((S.hi&0xFF00000000000000LL)>>56)); append(S1); append(__T("-"));
     S1.From_CC1((int8u) ((S.hi&0x0000000000FF0000LL)>>16)); append(S1);
-    S1.From_CC1((int8u) ((S.hi&0x00000000FF000000LL)>>24)); append(S1); append(_T("-"));
+    S1.From_CC1((int8u) ((S.hi&0x00000000FF000000LL)>>24)); append(S1); append(__T("-"));
     S1.From_CC1((int8u) ( S.hi&0x00000000000000FFLL     )); append(S1);
-    S1.From_CC1((int8u) ((S.hi&0x000000000000FF00LL)>> 8)); append(S1); append(_T("-"));
-    S1.From_CC2((int16u)((S.lo&0xFFFF000000000000LL)>>48)); append(S1); append(_T("-"));
+    S1.From_CC1((int8u) ((S.hi&0x000000000000FF00LL)>> 8)); append(S1); append(__T("-"));
+    S1.From_CC2((int16u)((S.lo&0xFFFF000000000000LL)>>48)); append(S1); append(__T("-"));
     S1.From_CC2((int16u)((S.lo&0x0000FFFF00000000LL)>>32)); append(S1);
     S1.From_CC2((int16u)((S.lo&0x00000000FFFF0000LL)>>16)); append(S1);
     S1.From_CC2((int16u)( S.lo&0x000000000000FFFFLL     )); append(S1);
@@ -569,10 +725,10 @@ Ztring& Ztring::From_UUID (const int128u S)
 {
     Ztring S1;
     S1.From_CC2((int16u)((S.hi&0xFFFF000000000000LL)>>48)); assign(S1);
-    S1.From_CC2((int16u)((S.hi&0x0000FFFF00000000LL)>>32)); append(S1); append(_T("-"));
-    S1.From_CC2((int16u)((S.hi&0x00000000FFFF0000LL)>>16)); append(S1); append(_T("-"));
-    S1.From_CC2((int16u)( S.hi&0x000000000000FFFFLL     )); append(S1); append(_T("-"));
-    S1.From_CC2((int16u)((S.lo&0xFFFF000000000000LL)>>48)); append(S1); append(_T("-"));
+    S1.From_CC2((int16u)((S.hi&0x0000FFFF00000000LL)>>32)); append(S1); append(__T("-"));
+    S1.From_CC2((int16u)((S.hi&0x00000000FFFF0000LL)>>16)); append(S1); append(__T("-"));
+    S1.From_CC2((int16u)( S.hi&0x000000000000FFFFLL     )); append(S1); append(__T("-"));
+    S1.From_CC2((int16u)((S.lo&0xFFFF000000000000LL)>>48)); append(S1); append(__T("-"));
     S1.From_CC2((int16u)((S.lo&0x0000FFFF00000000LL)>>32)); append(S1);
     S1.From_CC2((int16u)((S.lo&0x00000000FFFF0000LL)>>16)); append(S1);
     S1.From_CC2((int16u)( S.lo&0x000000000000FFFFLL     )); append(S1);
@@ -586,12 +742,23 @@ Ztring& Ztring::From_CC4 (const int32u S)
     S1.append(1, (char)((S&0xFF000000)>>24));
     S1.append(1, (char)((S&0x00FF0000)>>16));
     S1.append(1, (char)((S&0x0000FF00)>> 8));
-    S1.append(1, (char)((S&0x000000FF)>> 0));
+    S1.append(1, (char)((S&0x000000FF)    ));
     From_Local(S1.c_str());
 
-    //Test
-    if (empty())
-        assign(_T("(empty)"));
+    // Validity Test
+    if ( size()==4
+     || (size()==3 && (S&0x000000FF)==0x00000000 && at(0)>=0x20 && at(1)>=0x20 && at(2)>=0x20)
+     || (size()==2 && (S&0x0000FFFF)==0x00000000 && at(0)>=0x20 && at(1)>=0x20)
+     || (size()==1 && (S&0x00FFFFFF)==0x00000000 && at(0)>=0x20))
+        return *this;
+
+    // Not valid, using 0x as fallback
+    clear();
+    append(__T("0x"));
+    append(Ztring().From_CC1((int8u)((S&0xFF000000)>>24)));
+    append(Ztring().From_CC1((int8u)((S&0x00FF0000)>>16)));
+    append(Ztring().From_CC1((int8u)((S&0x0000FF00)>> 8)));
+    append(Ztring().From_CC1((int8u)((S&0x000000FF)    )));
 
     return *this;
 }
@@ -606,7 +773,7 @@ Ztring& Ztring::From_CC3 (const int32u S)
 
     //Test
     if (empty())
-        assign(_T("(empty)"));
+        assign(__T("(empty)"));
 
     return *this;
 }
@@ -615,7 +782,7 @@ Ztring& Ztring::From_CC2 (const int16u S)
 {
     clear();
     Ztring Pos1; Pos1.From_Number(S, 16);
-    resize(4-Pos1.size(), _T('0'));
+    resize(4-Pos1.size(), __T('0'));
     append(Pos1);
     MakeUpperCase();
 
@@ -626,7 +793,7 @@ Ztring& Ztring::From_CC1 (const int8u S)
 {
     clear();
     Ztring Pos1; Pos1.From_Number(S, 16);
-    resize(2-Pos1.size(), _T('0'));
+    resize(2-Pos1.size(), __T('0'));
     append(Pos1);
     MakeUpperCase();
 
@@ -635,7 +802,7 @@ Ztring& Ztring::From_CC1 (const int8u S)
 
 Ztring& Ztring::From_Number (const int8s I, int8u Radix)
 {
-    #if defined(__MINGW32__) || defined(__sun__)
+    #if defined(STREAM_MISSING)
         if (Radix==0)
         {
             clear();
@@ -645,18 +812,18 @@ Ztring& Ztring::From_Number (const int8s I, int8u Radix)
         #ifdef __MINGW32__
             _itot (I, C1, Radix);
         #else
-            _tnprintf(C1, 32, Radix==10?_T("%d"):(Radix==16?_T("%x"):(Radix==8?_T("%o"):_T(""))), I);
+            _tnprintf(C1, 32, Radix==10?__T("%d"):(Radix==16?__T("%x"):(Radix==8?__T("%o"):__T(""))), I);
         #endif
         assign (C1);
         delete[] C1; //C1=NULL;
     #else
-        toStringStream SS;
+        toStringStream Stream;
         #ifdef UNICODE
-            SS << setbase(Radix) << I;
+            Stream << setbase(Radix) << I;
         #else //UNICODE
-            SS << setbase(Radix) << (size_t)I; //On linux (at least), (un)signed char is detected as a char
+            Stream << setbase(Radix) << (size_t)I; //On linux (at least), (un)signed char is detected as a char
         #endif //UNICODE
-        assign(SS.str());
+        assign(Stream.str());
     #endif
     MakeUpperCase();
     return *this;
@@ -664,7 +831,7 @@ Ztring& Ztring::From_Number (const int8s I, int8u Radix)
 
 Ztring& Ztring::From_Number (const int8u I, int8u Radix)
 {
-    #if defined(__MINGW32__) || defined(__sun__)
+    #if defined(STREAM_MISSING)
         if (Radix==0)
         {
             clear();
@@ -674,18 +841,31 @@ Ztring& Ztring::From_Number (const int8u I, int8u Radix)
         #ifdef __MINGW32__
             _ultot (I, C1, Radix);
         #else
-            _tnprintf(C1, 32, Radix==10?_T("%d"):(Radix==16?_T("%x"):(Radix==8?_T("%o"):_T(""))), I);
+            _tnprintf(C1, 32, Radix==10?__T("%d"):(Radix==16?__T("%x"):(Radix==8?__T("%o"):__T(""))), I);
         #endif
         assign (C1);
         delete[] C1; //C1=NULL;
     #else
-        toStringStream SS;
-        #ifdef UNICODE
-            SS << setbase(Radix) << I;
-        #else //UNICODE
-            SS << setbase(Radix) << (size_t)I; //On linux (at least), (un)signed char is detected as a char
-        #endif //UNICODE
-        assign(SS.str());
+        if (Radix==2)
+        {
+            clear();
+            for (int8u Pos=0; Pos<8; Pos++)
+            {
+                if (I<(((int8u)1)<<Pos))
+                    break;
+                insert(0, 1, (I&(((int8u)1)<<Pos))?__T('1'):__T('0'));
+            }
+        }
+        else
+        {
+            toStringStream Stream;
+            #ifdef UNICODE
+                Stream << setbase(Radix) << I;
+            #else //UNICODE
+                Stream << setbase(Radix) << (size_t)I; //On linux (at least), (un)signed char is detected as a char
+            #endif //UNICODE
+            assign(Stream.str());
+        }
     #endif
     MakeUpperCase();
     return *this;
@@ -693,7 +873,7 @@ Ztring& Ztring::From_Number (const int8u I, int8u Radix)
 
 Ztring& Ztring::From_Number (const int16s I, int8u Radix)
 {
-    #if defined(__MINGW32__) || defined(__sun__)
+    #if defined(STREAM_MISSING)
         if (Radix==0)
         {
             clear();
@@ -703,14 +883,14 @@ Ztring& Ztring::From_Number (const int16s I, int8u Radix)
         #ifdef __MINGW32__
             _itot (I, C1, Radix);
         #else
-            _tnprintf(C1, 32, Radix==10?_T("%d"):(Radix==16?_T("%x"):(Radix==8?_T("%o"):_T(""))), I);
+            _tnprintf(C1, 32, Radix==10?__T("%d"):(Radix==16?__T("%x"):(Radix==8?__T("%o"):__T(""))), I);
         #endif
         assign (C1);
         delete[] C1; //C1=NULL;
     #else
-        toStringStream SS;
-        SS << setbase(Radix) << I;
-        assign(SS.str());
+        toStringStream Stream;
+        Stream << setbase(Radix) << I;
+        assign(Stream.str());
     #endif
     MakeUpperCase();
     return *this;
@@ -718,7 +898,7 @@ Ztring& Ztring::From_Number (const int16s I, int8u Radix)
 
 Ztring& Ztring::From_Number (const int16u I, int8u Radix)
 {
-    #if defined(__MINGW32__) || defined(__sun__)
+    #if defined(STREAM_MISSING)
         if (Radix==0)
         {
             clear();
@@ -728,14 +908,27 @@ Ztring& Ztring::From_Number (const int16u I, int8u Radix)
         #ifdef __MINGW32__
             _ultot (I, C1, Radix);
         #else
-            _tnprintf(C1, 32, Radix==10?_T("%d"):(Radix==16?_T("%x"):(Radix==8?_T("%o"):_T(""))), I);
+            _tnprintf(C1, 32, Radix==10?__T("%u"):(Radix==16?__T("%x"):(Radix==8?__T("%o"):__T(""))), I);
         #endif
         assign (C1);
         delete[] C1; //C1=NULL;
     #else
-        toStringStream SS;
-        SS << setbase(Radix) << I;
-        assign(SS.str());
+        if (Radix==2)
+        {
+            clear();
+            for (int8u Pos=0; Pos<16; Pos++)
+            {
+                if (I<(((int16u)1)<<Pos))
+                    break;
+                insert(0, 1, (I&(((int16u)1)<<Pos))?__T('1'):__T('0'));
+            }
+        }
+        else
+        {
+            toStringStream Stream;
+            Stream << setbase(Radix) << I;
+            assign(Stream.str());
+        }
     #endif
     MakeUpperCase();
     return *this;
@@ -743,7 +936,7 @@ Ztring& Ztring::From_Number (const int16u I, int8u Radix)
 
 Ztring& Ztring::From_Number (const int32s I, int8u Radix)
 {
-    #if defined(__MINGW32__) || defined(__sun__)
+    #if defined(STREAM_MISSING)
         if (Radix==0)
         {
             clear();
@@ -753,14 +946,14 @@ Ztring& Ztring::From_Number (const int32s I, int8u Radix)
         #ifdef __MINGW32__
             _itot (I, C1, Radix);
         #else
-            _tnprintf(C1, 32, Radix==10?_T("%d"):(Radix==16?_T("%x"):(Radix==8?_T("%o"):_T(""))), I);
+            _tnprintf(C1, 32, Radix==10?__T("%ld"):(Radix==16?__T("%lx"):(Radix==8?__T("%lo"):__T(""))), I);
         #endif
         assign (C1);
         delete[] C1; //C1=NULL;
     #else
-        toStringStream SS;
-        SS << setbase(Radix) << I;
-        assign(SS.str());
+        toStringStream Stream;
+        Stream << setbase(Radix) << I;
+        assign(Stream.str());
     #endif
     MakeUpperCase();
     return *this;
@@ -768,7 +961,7 @@ Ztring& Ztring::From_Number (const int32s I, int8u Radix)
 
 Ztring& Ztring::From_Number (const int32u I, int8u Radix)
 {
-    #if defined(__MINGW32__) || defined(__sun__)
+    #if defined(STREAM_MISSING)
         if (Radix==0)
         {
             clear();
@@ -778,14 +971,27 @@ Ztring& Ztring::From_Number (const int32u I, int8u Radix)
         #ifdef __MINGW32__
             _ultot (I, C1, Radix);
         #else
-            _tnprintf(C1, 32, Radix==10?_T("%d"):(Radix==16?_T("%x"):(Radix==8?_T("%o"):_T(""))), I);
+            _tnprintf(C1, 32, Radix==10?__T("%lu"):(Radix==16?__T("%lx"):(Radix==8?__T("%lo"):__T(""))), I);
         #endif
         assign (C1);
         delete[] C1; //C1=NULL;
     #else
-        toStringStream SS;
-        SS << setbase(Radix) << I;
-        assign(SS.str());
+        if (Radix==2)
+        {
+            clear();
+            for (int8u Pos=0; Pos<32; Pos++)
+            {
+                if (I<(((int32u)1)<<Pos))
+                    break;
+                insert(0, 1, (I&(((int32u)1)<<Pos))?__T('1'):__T('0'));
+            }
+        }
+        else
+        {
+            toStringStream Stream;
+            Stream << setbase(Radix) << I;
+            assign(Stream.str());
+        }
     #endif
     MakeUpperCase();
     return *this;
@@ -793,7 +999,7 @@ Ztring& Ztring::From_Number (const int32u I, int8u Radix)
 
 Ztring& Ztring::From_Number (const int64s I, int8u Radix)
 {
-    #if defined(__MINGW32__) || defined(__sun__)
+    #if defined(STREAM_MISSING)
         if (Radix==0)
         {
             clear();
@@ -803,14 +1009,14 @@ Ztring& Ztring::From_Number (const int64s I, int8u Radix)
         #ifdef __MINGW32__
             _i64tot (I, C1, Radix);
         #else
-            _tnprintf(C1, 32, Radix==10?_T("%d"):(Radix==16?_T("%x"):(Radix==8?_T("%o"):_T(""))), I); //TODO : int64s (this is int32s only)
+            _tnprintf(C1, 64, Radix==10?__T("%lld"):(Radix==16?__T("%llx"):(Radix==8?__T("%llo"):__T(""))), I);
         #endif
         assign (C1);
         delete[] C1; //C1=NULL;
     #else
-        toStringStream SS;
-        SS << setbase(Radix) << I;
-        assign(SS.str());
+        toStringStream Stream;
+        Stream << setbase(Radix) << I;
+        assign(Stream.str());
     #endif
     MakeUpperCase();
     return *this;
@@ -818,24 +1024,37 @@ Ztring& Ztring::From_Number (const int64s I, int8u Radix)
 
 Ztring& Ztring::From_Number (const int64u I, int8u Radix)
 {
-    #if defined(__MINGW32__) || defined(__sun__)
+    #if defined(STREAM_MISSING)
         if (Radix==0)
         {
             clear();
             return *this;
         }
-        Char* C1=new Char[65];
+        Char* C1=new Char[65]; C1[0] = 0;
         #ifdef __MINGW32__
             _ui64tot (I, C1, Radix);
         #else
-            _tnprintf(C1, 32, Radix==10?_T("%d"):(Radix==16?_T("%x"):(Radix==8?_T("%o"):_T(""))), I); //TODO : int64u (this is int32u only)
+            _tnprintf(C1, 64, Radix==10?__T("%llu"):(Radix==16?__T("%llx"):(Radix==8?__T("%llo"):__T(""))), I);
         #endif
         assign (C1);
         delete[] C1; //C1=NULL;
     #else
-        toStringStream SS;
-        SS << setbase(Radix) << I;
-        assign(SS.str());
+        if (Radix==2)
+        {
+            clear();
+            for (int8u Pos=0; Pos<32; Pos++)
+            {
+                if (I<(((int64u)1)<<Pos))
+                    break;
+                insert(0, 1, (I&(((int64u)1)<<Pos))?__T('1'):__T('0'));
+            }
+        }
+        else
+        {
+            toStringStream Stream;
+            Stream << setbase(Radix) << I;
+            assign(Stream.str());
+        }
     #endif
     MakeUpperCase();
     return *this;
@@ -850,21 +1069,24 @@ Ztring& Ztring::From_Number (const int128u I, int8u Radix)
 
 Ztring& Ztring::From_Number (const float32 F, int8u Precision, ztring_t Options)
 {
-    #if defined(__MINGW32__) || defined(__sun__) || defined(__mips__) || defined(__mipsel__)
+    #if defined(STREAM_MISSING)
         Char C1[100];
-        _tnprintf (C1, 99, (Ztring(_T("%."))+Ztring::ToZtring(Precision)+_T("f")).c_str(), F);
+        _tnprintf (C1, 99, (Ztring(__T("%."))+Ztring::ToZtring(Precision)+__T("f")).c_str(), F);
         assign(C1);
     #else
-        toStringStream SS;
-        SS << setprecision(Precision) << fixed << F;
-        assign(SS.str());
+        toStringStream Stream;
+        Stream << setprecision(Precision) << fixed << F;
+        assign(Stream.str());
+        #if defined(__BORLANDC__)
+            FindAndReplace(__T(","), __T(".")); //Borland C++ Builder 2010+Windows Seven put a comma for istringstream, but does not support comma for ostringstream
+        #endif
     #endif
 
-    if ((Options & Ztring_NoZero && size()>0) && find(_T('.'))>0)
+    if ((Options & Ztring_NoZero && size()>0) && find(__T('.'))!=string::npos)
     {
-        while (size()>0 && ((*this)[size()-1]==_T('0')))
+        while (size()>0 && ((*this)[size()-1]==__T('0')))
             resize(size()-1);
-        if (size()>0 && (*this)[size()-1]==_T('.'))
+        if (size()>0 && (*this)[size()-1]==__T('.'))
             resize(size()-1);
     }
 
@@ -873,21 +1095,24 @@ Ztring& Ztring::From_Number (const float32 F, int8u Precision, ztring_t Options)
 
 Ztring& Ztring::From_Number (const float64 F, int8u Precision, ztring_t Options)
 {
-    #if defined(__MINGW32__) || defined(__sun__) || defined(__mips__) || defined(__mipsel__)
+    #if defined(STREAM_MISSING)
         Char C1[100];
-        _tnprintf (C1, 99, (Ztring(_T("%."))+Ztring::ToZtring(Precision)+_T("f")).c_str(), F);
+        _tnprintf (C1, 99, (Ztring(__T("%."))+Ztring::ToZtring(Precision)+__T("f")).c_str(), F);
         assign(C1);
     #else
-        toStringStream SS;
-        SS << setprecision(Precision) << fixed << F;
-        assign(SS.str());
+        toStringStream Stream;
+        Stream << setprecision(Precision) << fixed << F;
+        assign(Stream.str());
+        #if defined(__BORLANDC__)
+            FindAndReplace(__T(","), __T(".")); //Borland C++ Builder 2010+Windows Seven put a comma for istringstream, but does not support comma for ostringstream
+        #endif
     #endif
 
-    if ((Options & Ztring_NoZero && size()>0) && find(_T('.'))>0)
+    if ((Options & Ztring_NoZero && size()>0) && find(__T('.'))!=string::npos)
     {
-        while (size()>0 && ((*this)[size()-1]==_T('0')))
+        while (size()>0 && ((*this)[size()-1]==__T('0')))
             resize(size()-1);
-        if (size()>0 && (*this)[size()-1]==_T('.'))
+        if (size()>0 && (*this)[size()-1]==__T('.'))
             resize(size()-1);
     }
 
@@ -896,49 +1121,61 @@ Ztring& Ztring::From_Number (const float64 F, int8u Precision, ztring_t Options)
 
 Ztring& Ztring::From_Number (const float80 F, int8u Precision, ztring_t Options)
 {
-    #if defined(__MINGW32__) || defined(__sun__) || defined(__mips__) || defined(__mipsel__)
+    #if defined(STREAM_MISSING)
         Char C1[100];
-        _tnprintf (C1, 99, (Ztring(_T("%."))+Ztring::ToZtring(Precision)+_T("f")).c_str(), F);
+        _tnprintf (C1, 99, (Ztring(__T("%."))+Ztring::ToZtring(Precision)+__T("f")).c_str(), F);
         assign(C1);
     #else
-        toStringStream SS;
-        SS << setprecision(Precision) << fixed << F;
-        assign(SS.str());
+        toStringStream Stream;
+        Stream << setprecision(Precision) << fixed << F;
+        assign(Stream.str());
+        #if defined(__BORLANDC__)
+            FindAndReplace(__T(","), __T(".")); //Borland C++ Builder 2010+Windows Seven put a comma for istringstream, but does not support comma for ostringstream
+        #endif
     #endif
 
-    if ((Options & Ztring_NoZero && size()>0) && find(_T('.'))>0)
+    if ((Options & Ztring_NoZero && size()>0) && find(__T('.'))!=string::npos)
     {
-        while (size()>0 && ((*this)[size()-1]==_T('0')))
+        while (size()>0 && ((*this)[size()-1]==__T('0')))
             resize(size()-1);
-        if (size()>0 && (*this)[size()-1]==_T('.'))
+        if (size()>0 && (*this)[size()-1]==__T('.'))
             resize(size()-1);
     }
 
     return *this;
 }
 
-#ifdef NEED_SIZET
+#ifdef SIZE_T_IS_LONG
 Ztring& Ztring::From_Number (const size_t I, int8u Radix)
 {
-    toStringStream SS;
-    SS << setbase(Radix) << I;
-    assign(SS.str());
+    #if defined(STREAM_MISSING)
+        Char C1[100];
+        _tnprintf(C1, 64, Radix==10?__T("%zu"):(Radix==16?__T("%zx"):(Radix==8?__T("%zo"):__T(""))), I);
+        assign(C1);
+    #else
+        toStringStream Stream;
+        Stream << setbase(Radix) << I;
+        assign(Stream.str());
+        #if defined(__BORLANDC__)
+            FindAndReplace(__T(","), __T(".")); //Borland C++ Builder 2010+Windows Seven put a comma for istringstream, but does not support comma for ostringstream
+        #endif
+    #endif
     MakeUpperCase();
     return *this;
 }
-#endif //NEED_SIZET
+#endif //SIZE_T_IS_LONG
 
 Ztring& Ztring::From_BCD     (const int8u I)
 {
-    #ifdef __sun__
+    #if defined(STREAM_MISSING)
         clear();
-        append(1, _T('0')+I/0x10);
-        append(1, _T('0')+I%0x10);
+        append(1, __T('0')+I/0x10);
+        append(1, __T('0')+I%0x10);
     #else
-        toStringStream SS;
-        SS << I/0x10;
-        SS << I%0x10;
-        assign(SS.str());
+        toStringStream Stream;
+        Stream << I/0x10;
+        Stream << I%0x10;
+        assign(Stream.str());
     #endif
     return *this;
 }
@@ -956,24 +1193,24 @@ Ztring& Ztring::Duration_From_Milliseconds (const int64s Value_)
 
     int64u HH=(int8u)(Value/1000/60/60);
     int64u MM=Value/1000/60   -((HH*60));
-    int64u SS=Value/1000      -((HH*60+MM)*60);
-    int64u MS=Value           -((HH*60+MM)*60+SS)*1000;
+    int64u Stream=Value/1000      -((HH*60+MM)*60);
+    int64u MS=Value           -((HH*60+MM)*60+Stream)*1000;
     Ztring DateT;
     Ztring Date;
-    DateT.From_Number(HH); if (DateT.size()<2){DateT=Ztring(_T("0"))+DateT;}
+    DateT.From_Number(HH); if (DateT.size()<2){DateT=Ztring(__T("0"))+DateT;}
     Date+=DateT;
-    Date+=_T(":");
-    DateT.From_Number(MM); if (DateT.size()<2){DateT=Ztring(_T("0"))+DateT;}
+    Date+=__T(":");
+    DateT.From_Number(MM); if (DateT.size()<2){DateT=Ztring(__T("0"))+DateT;}
     Date+=DateT;
-    Date+=_T(":");
-    DateT.From_Number(SS); if (DateT.size()<2){DateT=Ztring(_T("0"))+DateT;}
+    Date+=__T(":");
+    DateT.From_Number(Stream); if (DateT.size()<2){DateT=Ztring(__T("0"))+DateT;}
     Date+=DateT;
-    Date+=_T(".");
-    DateT.From_Number(MS); if (DateT.size()<2){DateT=Ztring(_T("00"))+DateT;} else if (DateT.size()<3){DateT=Ztring(_T("0"))+DateT;}
+    Date+=__T(".");
+    DateT.From_Number(MS); if (DateT.size()<2){DateT=Ztring(__T("00"))+DateT;} else if (DateT.size()<3){DateT=Ztring(__T("0"))+DateT;}
     Date+=DateT;
     if (Negative)
     {
-        assign(_T("-"));
+        assign(__T("-"));
         append(Date);
     }
     else
@@ -986,20 +1223,20 @@ Ztring& Ztring::Duration_From_Milliseconds (const int64u Value)
 {
     int64u HH=(int8u)(Value/1000/60/60);
     int64u MM=Value/1000/60   -((HH*60));
-    int64u SS=Value/1000      -((HH*60+MM)*60);
-    int64u MS=Value           -((HH*60+MM)*60+SS)*1000;
+    int64u Stream=Value/1000      -((HH*60+MM)*60);
+    int64u MS=Value           -((HH*60+MM)*60+Stream)*1000;
     Ztring DateT;
     Ztring Date;
-    DateT.From_Number(HH); if (DateT.size()<2){DateT=Ztring(_T("0"))+DateT;}
+    DateT.From_Number(HH); if (DateT.size()<2){DateT=Ztring(__T("0"))+DateT;}
     Date+=DateT;
-    Date+=_T(":");
-    DateT.From_Number(MM); if (DateT.size()<2){DateT=Ztring(_T("0"))+DateT;}
+    Date+=__T(":");
+    DateT.From_Number(MM); if (DateT.size()<2){DateT=Ztring(__T("0"))+DateT;}
     Date+=DateT;
-    Date+=_T(":");
-    DateT.From_Number(SS); if (DateT.size()<2){DateT=Ztring(_T("0"))+DateT;}
+    Date+=__T(":");
+    DateT.From_Number(Stream); if (DateT.size()<2){DateT=Ztring(__T("0"))+DateT;}
     Date+=DateT;
-    Date+=_T(".");
-    DateT.From_Number(MS); if (DateT.size()<2){DateT=Ztring(_T("00"))+DateT;} else if (DateT.size()<3){DateT=Ztring(_T("0"))+DateT;}
+    Date+=__T(".");
+    DateT.From_Number(MS); if (DateT.size()<2){DateT=Ztring(__T("00"))+DateT;} else if (DateT.size()<3){DateT=Ztring(__T("0"))+DateT;}
     Date+=DateT;
     assign (Date.c_str());
     return *this;
@@ -1010,10 +1247,10 @@ Ztring& Ztring::Date_From_Milliseconds_1601 (const int64u Value)
     if (Value>=11644473600000LL) //Values <1970 are not supported
     {
         Date_From_Seconds_1970((int32u)((Value-11644473600000LL)/1000));
-        append(_T("."));
+        append(__T("."));
         Ztring Milliseconds; Milliseconds.From_Number(Value%1000);
         while (Milliseconds.size()<3)
-            Milliseconds+=_T('0');
+            Milliseconds+=__T('0');
         append(Milliseconds);
     }
     else
@@ -1024,81 +1261,73 @@ Ztring& Ztring::Date_From_Milliseconds_1601 (const int64u Value)
 
 Ztring& Ztring::Date_From_Seconds_1601 (const int64u Value)
 {
-    if (Value>=11644473600LL) //Values <1970 are not supported
-        Date_From_Seconds_1970((int32u)(Value-11644473600LL));
-    else
-        clear(); //Not supported
+    return Date_From_Seconds_1970(((int64s)Value)-11644473600LL);
+}
 
-    return *this;
+Ztring& Ztring::Date_From_Seconds_1900 (const int32u Value)
+{
+    if (Value>2208988800)
+        return Date_From_Seconds_1970(((int64s)Value)-2208988800);
+    else
+        return Date_From_Seconds_1970(((int64s)Value)+0x100000000LL-2208988800); //Value is considering to loop e.g. NTP value
+}
+
+Ztring& Ztring::Date_From_Seconds_1900 (const int64s Value)
+{
+    return Date_From_Seconds_1970(Value-2208988800);
+}
+
+Ztring& Ztring::Date_From_Seconds_1904 (const int32u Value)
+{
+    return Date_From_Seconds_1970(((int64s)Value)-2082844800);
 }
 
 Ztring& Ztring::Date_From_Seconds_1904 (const int64u Value)
 {
-    #ifdef ZENLIB_USEWX
-        /*
-        wxDateTime Date;
-        Date.SetYear(1904);
-        Date.SetMonth(wxDateTime::Jan);
-        Date.SetDay(1);
-        Date.SetHour(0);
-        Date.SetMinute(0);
-        Date.SetSecond(0);
-        if (Value>=0x80000000)
-        {
-            //wxTimeSpan doesn't support unsigned int
-            int64u Value2=Value;
-            while (Value2>0x7FFFFFFF)
-            {
-                Date+=wxTimeSpan::Seconds(0x7FFFFFFF);
-                Value2-=0x7FFFFFFF;
-            }
-            Date+=wxTimeSpan::Seconds(Value2);
-        }
-        else
-            Date+=wxTimeSpan::Seconds(Value);
+    return Date_From_Seconds_1970(((int64s)Value)-2082844800);
+}
 
-        Ztring ToReturn=_T("UTC ");
-        ToReturn+=Date.FormatISODate();
-        ToReturn+=_T(" ");
-        ToReturn+=Date.FormatISOTime();
-
-        assign (ToReturn.c_str());
-        */ //WxDateTime is buggy???
-        if (Value>2082844800 && Value<2082844800+0x100000000LL) //Values <1970 and >2038 are not supported, 1970-01-01 00:00:00 is considered as not possible too
-            Date_From_Seconds_1970((int32u)(Value-2082844800));
-        else
-            clear(); //Not supported
-
-    #else //ZENLIB_USEWX
-        if (Value>2082844800 && Value<2082844800+0x100000000LL) //Values <1970 and >2038 are not supported, 1970-01-01 00:00:00 is considered as not possible too
-            Date_From_Seconds_1970((int32u)(Value-2082844800));
-        else
-            clear(); //Not supported
-    #endif //ZENLIB_USEWX
-    return *this;
+Ztring& Ztring::Date_From_Seconds_1904 (const int64s Value)
+{
+    return Date_From_Seconds_1970(Value-2082844800);
 }
 
 Ztring& Ztring::Date_From_Seconds_1970 (const int32u Value)
 {
+    return Date_From_Seconds_1970((int64s)Value);
+}
+
+Ztring& Ztring::Date_From_Seconds_1970 (const int32s Value)
+{
+    return Date_From_Seconds_1970((int64s)Value);
+}
+
+Ztring& Ztring::Date_From_Seconds_1970 (const int64s Value)
+{
     time_t Time=(time_t)Value;
     struct tm *Gmt=gmtime(&Time);
+    if (!Gmt)
+    {
+        clear();
+        return *this;
+    }
     Ztring DateT;
-    Ztring Date=_T("UTC ");
+    Ztring Date=__T("UTC ");
     Date+=Ztring::ToZtring((Gmt->tm_year+1900));
-    Date+=_T("-");
-    DateT.From_Number(Gmt->tm_mon+1); if (DateT.size()<2){DateT=Ztring(_T("0"))+Ztring::ToZtring(Gmt->tm_mon+1);}
+    Date+=__T("-");
+    DateT.From_Number(Gmt->tm_mon+1); if (DateT.size()<2){DateT=Ztring(__T("0"))+Ztring::ToZtring(Gmt->tm_mon+1);}
     Date+=DateT;
-    Date+=_T("-");
-    DateT.From_Number(Gmt->tm_mday); if (DateT.size()<2){DateT=Ztring(_T("0"))+Ztring::ToZtring(Gmt->tm_mday);}
+    Date+=__T("-");
+    DateT.From_Number(Gmt->tm_mday); if (DateT.size()<2){DateT=Ztring(__T("0"))+Ztring::ToZtring(Gmt->tm_mday);}
     Date+=DateT;
-    Date+=_T(" ");
-    DateT.From_Number(Gmt->tm_hour); if (DateT.size()<2){DateT=Ztring(_T("0"))+Ztring::ToZtring(Gmt->tm_hour);}
+    Date+=__T(" ");
+    DateT.From_Number(Gmt->tm_hour); if (DateT.size()<2){DateT=Ztring(__T("0"))+Ztring::ToZtring(Gmt->tm_hour);}
     Date+=DateT;
-    Date+=_T(":");
-    DateT=Ztring::ToZtring(Gmt->tm_min); if (DateT.size()<2){DateT=Ztring(_T("0"))+Ztring::ToZtring(Gmt->tm_min);}
+    Date+=__T(":");
+    DateT=Ztring::ToZtring(Gmt->tm_min); if (DateT.size()<2){DateT=Ztring(__T("0"))+Ztring::ToZtring(Gmt->tm_min);}
     Date+=DateT;
-    Date+=_T(":");
-    DateT.From_Number(Gmt->tm_sec); if (DateT.size()<2){DateT=Ztring(_T("0"))+Ztring::ToZtring(Gmt->tm_sec);}
+    Date+=__T(":");
+    DateT.From_Number(Gmt->tm_sec); if (DateT.size()<2){DateT=Ztring(__T("0"))+Ztring::ToZtring(Gmt->tm_sec);}
     Date+=DateT;
     assign (Date.c_str());
     return *this;
@@ -1111,20 +1340,20 @@ Ztring& Ztring::Date_From_Seconds_1970_Local (const int32u Value)
     Ztring DateT;
     Ztring Date;
     Date+=Ztring::ToZtring((Gmt->tm_year+1900));
-    Date+=_T("-");
-    DateT.From_Number(Gmt->tm_mon+1); if (DateT.size()<2){DateT=Ztring(_T("0"))+Ztring::ToZtring(Gmt->tm_mon+1);}
+    Date+=__T("-");
+    DateT.From_Number(Gmt->tm_mon+1); if (DateT.size()<2){DateT=Ztring(__T("0"))+Ztring::ToZtring(Gmt->tm_mon+1);}
     Date+=DateT;
-    Date+=_T("-");
-    DateT.From_Number(Gmt->tm_mday); if (DateT.size()<2){DateT=Ztring(_T("0"))+Ztring::ToZtring(Gmt->tm_mday);}
+    Date+=__T("-");
+    DateT.From_Number(Gmt->tm_mday); if (DateT.size()<2){DateT=Ztring(__T("0"))+Ztring::ToZtring(Gmt->tm_mday);}
     Date+=DateT;
-    Date+=_T(" ");
-    DateT.From_Number(Gmt->tm_hour); if (DateT.size()<2){DateT=Ztring(_T("0"))+Ztring::ToZtring(Gmt->tm_hour);}
+    Date+=__T(" ");
+    DateT.From_Number(Gmt->tm_hour); if (DateT.size()<2){DateT=Ztring(__T("0"))+Ztring::ToZtring(Gmt->tm_hour);}
     Date+=DateT;
-    Date+=_T(":");
-    DateT=Ztring::ToZtring(Gmt->tm_min); if (DateT.size()<2){DateT=Ztring(_T("0"))+Ztring::ToZtring(Gmt->tm_min);}
+    Date+=__T(":");
+    DateT=Ztring::ToZtring(Gmt->tm_min); if (DateT.size()<2){DateT=Ztring(__T("0"))+Ztring::ToZtring(Gmt->tm_min);}
     Date+=DateT;
-    Date+=_T(":");
-    DateT.From_Number(Gmt->tm_sec); if (DateT.size()<2){DateT=Ztring(_T("0"))+Ztring::ToZtring(Gmt->tm_sec);}
+    Date+=__T(":");
+    DateT.From_Number(Gmt->tm_sec); if (DateT.size()<2){DateT=Ztring(__T("0"))+Ztring::ToZtring(Gmt->tm_sec);}
     Date+=DateT;
     assign (Date.c_str());
     return *this;
@@ -1140,21 +1369,21 @@ Ztring& Ztring::Date_From_String (const char* Value, size_t Value_Size)
     }
 
     #ifdef ZENLIB_USEWX
-        Ztring ToReturn=_T("UTC ");
+        Ztring ToReturn=__T("UTC ");
         wxDateTime Date;
         Ztring DateS;
         DateS.From_Local(Value, Value_Size).c_str();
-        if (!DateS.empty() && DateS[DateS.size()-1]==_T('\n'))
+        if (!DateS.empty() && DateS[DateS.size()-1]==__T('\n'))
             DateS.resize(DateS.size()-1);
 
         //Some strange formating : exactly 24 bytes (or 25 with 0x0A at the end) and Year is at the end
-        if (DateS.size()==24 && DateS[23]>=_T('0') && DateS[23]<=_T('9') && DateS[21]>=_T('0') && DateS[21]<=_T('9') && DateS[19]==_T(' '))
-            Date.ParseFormat(DateS.c_str(), _T("%a %b %d %H:%M:%S %Y"));
+        if (DateS.size()==24 && DateS[23]>=__T('0') && DateS[23]<=__T('9') && DateS[21]>=__T('0') && DateS[21]<=__T('9') && DateS[19]==__T(' '))
+            Date.ParseFormat(DateS.c_str(), __T("%a %b %d %H:%M:%S %Y"));
         //ISO date
-        else if (DateS.size()==10 && (DateS[4]<_T('0') || DateS[4]>_T('9')) && (DateS[7]<_T('0') || DateS[7]>_T('9')))
+        else if (DateS.size()==10 && (DateS[4]<__T('0') || DateS[4]>__T('9')) && (DateS[7]<__T('0') || DateS[7]>__T('9')))
         {
-            DateS[4]=_T('-');
-            DateS[7]=_T('-');
+            DateS[4]=__T('-');
+            DateS[7]=__T('-');
             ToReturn+=DateS;
         }
         //Default
@@ -1164,26 +1393,113 @@ Ztring& Ztring::Date_From_String (const char* Value, size_t Value_Size)
         if (ToReturn.size()<5)
         {
             ToReturn+=Date.FormatISODate();
-            ToReturn+=_T(" ");
+            ToReturn+=__T(" ");
             ToReturn+=Date.FormatISOTime();
         }
-        else if (ToReturn.size()<5)
+        else
             ToReturn+=DateS;
 
         assign (ToReturn.c_str());
     #else //ZENLIB_USEWX
         Ztring DateS; DateS.From_Local(Value, 0, Value_Size);
-        if (DateS.size()==20 && DateS[4]==_T('-') && DateS[7]==_T('-') && DateS[10]==_T('T') && DateS[13]==_T(':') && DateS[16]==_T(':') && DateS[19]==_T('Z'))
+        //Unix style formating : exactly 24 bytes (or 25 with 0x0A at the end) and Year is at the end
+        if ((DateS.size()==24 || (DateS.size()==25 && DateS[24]==__T('\n'))) && DateS[23]>=__T('0') && DateS[23]<=__T('9') && DateS[21]>=__T('0') && DateS[21]<=__T('9') && DateS[19]==__T(' '))
+        {
+            clear();
+            append(1, DateS[20]);
+            append(1, DateS[21]);
+            append(1, DateS[22]);
+            append(1, DateS[23]);
+            append(1, __T('-'));
+                 if (DateS[4]==__T('J') && DateS[5]==__T('a') && DateS[6]==__T('n') && DateS[7]==__T(' '))
+            {
+                append(1, __T('0'));
+                append(1, __T('1'));
+            }
+            else if (DateS[4]==__T('F') && DateS[5]==__T('e') && DateS[6]==__T('b') && DateS[7]==__T(' '))
+            {
+                append(1, __T('0'));
+                append(1, __T('2'));
+            }
+            else if (DateS[4]==__T('M') && DateS[5]==__T('a') && DateS[6]==__T('r') && DateS[7]==__T(' '))
+            {
+                append(1, __T('0'));
+                append(1, __T('3'));
+            }
+            else if (DateS[4]==__T('A') && DateS[5]==__T('p') && DateS[6]==__T('r') && DateS[7]==__T(' '))
+            {
+                append(1, __T('0'));
+                append(1, __T('4'));
+            }
+            else if (DateS[4]==__T('M') && DateS[5]==__T('a') && DateS[6]==__T('y') && DateS[7]==__T(' '))
+            {
+                append(1, __T('0'));
+                append(1, __T('5'));
+            }
+            else if (DateS[4]==__T('J') && DateS[5]==__T('u') && DateS[6]==__T('n') && DateS[7]==__T(' '))
+            {
+                append(1, __T('0'));
+                append(1, __T('6'));
+            }
+            else if (DateS[4]==__T('J') && DateS[5]==__T('u') && DateS[6]==__T('l') && DateS[7]==__T(' '))
+            {
+                append(1, __T('0'));
+                append(1, __T('7'));
+            }
+            else if (DateS[4]==__T('A') && DateS[5]==__T('u') && DateS[6]==__T('g') && DateS[7]==__T(' '))
+            {
+                append(1, __T('0'));
+                append(1, __T('8'));
+            }
+            else if (DateS[4]==__T('S') && DateS[5]==__T('e') && DateS[6]==__T('p') && DateS[7]==__T(' '))
+            {
+                append(1, __T('0'));
+                append(1, __T('9'));
+            }
+            else if (DateS[4]==__T('O') && DateS[5]==__T('c') && DateS[6]==__T('t') && DateS[7]==__T(' '))
+            {
+                append(1, __T('1'));
+                append(1, __T('0'));
+            }
+            else if (DateS[4]==__T('N') && DateS[5]==__T('o') && DateS[6]==__T('v') && DateS[7]==__T(' '))
+            {
+                append(1, __T('1'));
+                append(1, __T('1'));
+            }
+            else if (DateS[4]==__T('D') && DateS[5]==__T('e') && DateS[6]==__T('c') && DateS[7]==__T(' '))
+            {
+                append(1, __T('1'));
+                append(1, __T('2'));
+            }
+            else
+            {
+                assign(DateS);
+                return *this;
+            }
+            append(1, __T('-'));
+            append(1, DateS[8]);
+            append(1, DateS[9]);
+            append(1, __T(' '));
+            append(1, DateS[11]);
+            append(1, DateS[12]);
+            append(1, __T(':'));
+            append(1, DateS[14]);
+            append(1, DateS[15]);
+            append(1, __T(':'));
+            append(1, DateS[17]);
+            append(1, DateS[18]);
+        }
+        else if (DateS.size()==20 && DateS[4]==__T('-') && DateS[7]==__T('-') && DateS[10]==__T('T') && DateS[13]==__T(':') && DateS[16]==__T(':') && DateS[19]==__T('Z'))
         {
             DateS.resize(19);
-            DateS[10]=_T(' ');
-            assign(_T("UTC "));
+            DateS[10]=__T(' ');
+            assign(__T("UTC "));
             append(DateS);
         }
-        else if (DateS.size()==23 && DateS[4]==_T('-') && DateS[7]==_T('-') && DateS[10]==_T(' ') && DateS[14]==_T(' ') && DateS[17]==_T(':') && DateS[20]==_T(':'))
+        else if (DateS.size()==23 && DateS[4]==__T('-') && DateS[7]==__T('-') && DateS[10]==__T(' ') && DateS[14]==__T(' ') && DateS[17]==__T(':') && DateS[20]==__T(':'))
         {
             DateS.erase(10, 4);
-            //assign(_T("UTC ")); //Is not UTC
+            //assign(__T("UTC ")); //Is not UTC
             append(DateS);
         }
         else
@@ -1195,23 +1511,23 @@ Ztring& Ztring::Date_From_String (const char* Value, size_t Value_Size)
 Ztring& Ztring::Date_From_Numbers (const int8u Year, const int8u Month, const int8u Day, const int8u Hour, const int8u Minute, const int8u Second)
 {
     Ztring DateT;
-    Ztring Date=_T("UTC ");
-    DateT.From_Number(Year); if (DateT.size()<2){DateT=Ztring(_T("200"))+Ztring::ToZtring(Year);}; if (DateT.size()<3){DateT=Ztring(_T("20"))+Ztring::ToZtring(Year);}
+    Ztring Date=__T("UTC ");
+    DateT.From_Number(Year); if (DateT.size()<2){DateT=Ztring(__T("200"))+Ztring::ToZtring(Year);}; if (DateT.size()<3){DateT=Ztring(__T("20"))+Ztring::ToZtring(Year);}
     Date+=DateT;
-    Date+=_T("-");
-    DateT.From_Number(Month); if (DateT.size()<2){DateT=Ztring(_T("0"))+Ztring::ToZtring(Month);}
+    Date+=__T("-");
+    DateT.From_Number(Month); if (DateT.size()<2){DateT=Ztring(__T("0"))+Ztring::ToZtring(Month);}
     Date+=DateT;
-    Date+=_T("-");
-    DateT.From_Number(Day); if (DateT.size()<2){DateT=Ztring(_T("0"))+Ztring::ToZtring(Day);}
+    Date+=__T("-");
+    DateT.From_Number(Day); if (DateT.size()<2){DateT=Ztring(__T("0"))+Ztring::ToZtring(Day);}
     Date+=DateT;
-    Date+=_T(" ");
-    DateT.From_Number(Hour); if (DateT.size()<2){DateT=Ztring(_T("0"))+Ztring::ToZtring(Hour);}
+    Date+=__T(" ");
+    DateT.From_Number(Hour); if (DateT.size()<2){DateT=Ztring(__T("0"))+Ztring::ToZtring(Hour);}
     Date+=DateT;
-    Date+=_T(":");
-    DateT=Ztring::ToZtring(Minute); if (DateT.size()<2){DateT=Ztring(_T("0"))+Ztring::ToZtring(Minute);}
+    Date+=__T(":");
+    DateT=Ztring::ToZtring(Minute); if (DateT.size()<2){DateT=Ztring(__T("0"))+Ztring::ToZtring(Minute);}
     Date+=DateT;
-    Date+=_T(":");
-    DateT.From_Number(Second); if (DateT.size()<2){DateT=Ztring(_T("0"))+Ztring::ToZtring(Second);}
+    Date+=__T(":");
+    DateT.From_Number(Second); if (DateT.size()<2){DateT=Ztring(__T("0"))+Ztring::ToZtring(Second);}
     Date+=DateT;
     assign (Date.c_str());
     return *this;
@@ -1236,78 +1552,94 @@ std::wstring Ztring::To_Unicode () const
 std::string Ztring::To_UTF8 () const
 {
     #ifdef _UNICODE
-        #ifdef ZENLIB_USEWX
-            return wxConvUTF8.cWC2MB(c_str()).data();
-        #else //ZENLIB_USEWX
-            #ifdef WINDOWS
-                if (IsWin9X())
+        //Correction thanks to Andrew Jang
+        // Don't use WideCharToMultiByte(), some characters are not well converted
+        std::string ToReturn;
+        ToReturn.reserve(size()); // more efficient
+
+        const wchar_t* Z=c_str();
+
+        while (*Z)
+        {
+            if (*Z < 0x80)
+            {
+                ToReturn += (char)(*(Z++));
+                continue;
+            }
+            
+            int32u wc; // must be unsigned.
+
+            #if defined(_MSC_VER)
+                #pragma warning(push)
+                #pragma warning(disable:4127)
+            #endif //defined(_MSC_VER)
+            if (sizeof(wchar_t) == 2)
+            #if defined(_MSC_VER)
+                #pragma warning(pop)
+            #endif //defined(_MSC_VER)
+            {
+                if (((*Z) & 0xFC00) == 0xD800)
                 {
-                    std::string ToReturn;
-                    const wchar_t* Z=c_str();
-                    while (*Z) //0 is end
-                    {
-                        //1 byte
-                        if (*Z<0x80)
-                            ToReturn += (char)  (*Z);
-                        else if (*Z<0x1000)
-                        {
-                            ToReturn += (char)(((*Z)>> 6)&0x1F);
-                            ToReturn += (char)( (*Z)     &0x3F);
-                        }
-                        else
-                            break; //Bad character (or UTF-16LE, not yet supported)
-                        Z++;
-                    }
-                    return ToReturn;
+                    //UTF-16
+                    wc =( (((int16u) *Z) & 0x3FF) + 0x40) << 10;
+                    Z++;
+                    wc |= (((int16u) *Z) & 0x3FF);
                 }
                 else
-                {
-                    int Size=WideCharToMultiByte(CP_UTF8, 0, c_str(), -1, NULL, 0, NULL, NULL);
-                    if (Size!=0)
-                    {
-                        char* AnsiString=new char[Size+1];
-                        WideCharToMultiByte(CP_UTF8, 0, c_str(), -1, AnsiString, Size, NULL, NULL);
-                        AnsiString[Size]='\0';
-                        std::string ToReturn(AnsiString);
-                        delete[] AnsiString; //AnsiString=NULL;
-                        return ToReturn;
-                    }
-                    else
-                        return std::string();
-                }
-            #else //WINDOWS
-                std::string ToReturn;
-                const wchar_t* Z=c_str();
-                while (*Z) //0 is end
-                {
-                    //1 byte
-                    if (*Z<0x80)
-                        ToReturn += (char)  (*Z);
-                    else if (*Z<0x1000)
-                    {
-                        ToReturn += (char)(((*Z)>> 6)&0x1F);
-                        ToReturn += (char)( (*Z)     &0x3F);
-                    }
-                    else if (*Z<0x40000)
-                    {
-                        ToReturn += (char)(((*Z)>>12)&0x0F);
-                        ToReturn += (char)(((*Z)>> 6)&0x3F);
-                        ToReturn += (char)( (*Z)     &0x3F);
-                    }
-                    else if (*Z<0x1000000)
-                    {
-                        ToReturn += (char)(((*Z)>>18)&0x07);
-                        ToReturn += (char)(((*Z)>>12)&0x3F);
-                        ToReturn += (char)(((*Z)>> 6)&0x3F);
-                        ToReturn += (char)( (*Z)     &0x3F);
-                    }
-                    else
-                        break; //Bad character
-                    Z++;
-                }
-                return ToReturn;
-            #endif
-        #endif //ZENLIB_USEWX
+                wc = (int16u) *Z; // avoid a cast problem if wchar_t is signed.
+            }
+            else
+                wc = *Z;
+
+            int count;
+
+            // refer to http://en.wikipedia.org/wiki/UTF-8#Description
+
+            if (wc < 0x80)
+                count = 1;
+            else if (wc < 0x800)
+                count = 2;
+            else if (wc < 0x10000)
+                count = 3;
+            else if (wc < 0x200000)
+                count = 4;
+            else if (wc < 0x4000000)
+                count = 5;
+            else if (wc <= 0x7fffffff)
+                count = 6;
+            else
+                break;  // bad character
+
+            int64u utfbuf = 0; // 8 bytes
+            char* utf8chars = (char*) &utfbuf;
+
+            switch (count)
+            {
+            case 6:
+                utf8chars[5] = 0x80 | (wc & 0x3f);
+                wc = (wc >> 6) | 0x4000000;
+            case 5:
+                utf8chars[4] = 0x80 | (wc & 0x3f);
+                wc = (wc >> 6) | 0x200000;
+            case 4:
+                utf8chars[3] = 0x80 | (wc & 0x3f);
+                wc = (wc >> 6) | 0x10000;
+            case 3:
+                utf8chars[2] = 0x80 | (wc & 0x3f);
+                wc = (wc >> 6) | 0x800;
+            case 2:
+                utf8chars[1] = 0x80 | (wc & 0x3f);
+                wc = (wc >> 6) | 0xc0;
+            case 1:
+                utf8chars[0] = (char) wc;
+            }
+
+            ToReturn += utf8chars;
+
+            ++Z;
+        }
+
+        return ToReturn;
     #else
         #ifdef ZENLIB_USEWX
             return wxConvUTF8.cWC2MB(wxConvCurrent->cMB2WC(c_str())).data();
@@ -1391,19 +1723,19 @@ int128u Ztring::To_UUID () const
 
     for (size_t Pos=0; Pos<36; Pos++)
     {
-        if ((Temp[Pos]< _T('0') || Temp[Pos]> _T('9'))
-         && (Temp[Pos]< _T('A') || Temp[Pos]> _T('F'))
-         && (Temp[Pos]< _T('a') || Temp[Pos]> _T('f')))
+        if ((Temp[Pos]< __T('0') || Temp[Pos]> __T('9'))
+         && (Temp[Pos]< __T('A') || Temp[Pos]> __T('F'))
+         && (Temp[Pos]< __T('a') || Temp[Pos]> __T('f')))
             return 0;
-        if (Temp[Pos]>=_T('A') && Temp[Pos]<=_T('F'))
+        if (Temp[Pos]>=__T('A') && Temp[Pos]<=__T('F'))
         {
-            Temp[Pos]-=_T('A');
-            Temp[Pos]+=_T('9')+1;
+            Temp[Pos]-=__T('A');
+            Temp[Pos]+=__T('9')+1;
         }
-        if (Temp[Pos]>=_T('a') && Temp[Pos]<=_T('f'))
+        if (Temp[Pos]>=__T('a') && Temp[Pos]<=__T('f'))
         {
-            Temp[Pos]-=_T('a');
-            Temp[Pos]+=_T('9')+1;
+            Temp[Pos]-=__T('a');
+            Temp[Pos]+=__T('9')+1;
         }
 
         switch(Pos)
@@ -1412,12 +1744,12 @@ int128u Ztring::To_UUID () const
             case 12 :
             case 17 :
             case 22 :
-                        if (at(Pos+1)!=_T('-'))
+                        if (at(Pos+1)!=__T('-'))
                             return 0;
                         Pos++; //Skipping dash in the test
         }
     }
-    
+
     int128u I;
     I.hi=((int64u)((int8u)(Temp[ 0]-'0'))<<60)
        | ((int64u)((int8u)(Temp[ 1]-'0'))<<56)
@@ -1477,24 +1809,24 @@ int8s Ztring::To_int8s (int8u Radix, ztring_t Options) const
 
     //Conversion
     int I;
-    #ifdef __MINGW32__
-        I=_ttoi(c_str());
-    #elif defined(__sun__)
-        #ifdef UNICODE
+    #if defined(STREAM_MISSING)
+        #ifdef __MINGW32__
+            I=_ttoi(c_str());
+        #elif defined(UNICODE)
             std::string S=To_UTF8();
             I=atoi(S.c_str());
         #else //UNICODE
             I=atoi(c_str());
         #endif //UNICODE
     #else
-        tStringStream SS(*this);
-        SS >> setbase(Radix) >> I;
-        if (SS.fail())
+        tStringStream Stream(*this);
+        Stream >> setbase(Radix) >> I;
+        if (Stream.fail())
             return 0;
     #endif
 
     //Rounded
-    if (Options==Ztring_Rounded && find(_T("."))!=Error)
+    if (Options==Ztring_Rounded && find(__T('.'))!=Error)
     {
         float80 F=To_float80();
         F-=I;
@@ -1515,24 +1847,24 @@ int8u Ztring::To_int8u (int8u Radix, ztring_t Options) const
 
     //Conversion
     unsigned int I;
-    #ifdef __MINGW32__
-        I=_ttoi64(c_str()); //TODO : I>0x7FFFFFFF - Replaced by i64 version to support, but not good
-    #elif defined(__sun__)
-        #ifdef UNICODE
+    #if defined(STREAM_MISSING)
+        #ifdef __MINGW32__
+            I=_ttoi64(c_str()); //TODO : I>0x7FFFFFFF - Replaced by i64 version to support, but not good
+        #elif defined(UNICODE)
             std::string S=To_UTF8();
             I=atoi(S.c_str());
-        #else //UNICODE
+        #else //defined(UNICODE)
             I=atoi(c_str());
-        #endif //UNICODE
+        #endif //defined(UNICODE)
     #else
-        tStringStream SS(*this);
-        SS >> setbase(Radix) >> I;
-        if (SS.fail())
+        tStringStream Stream(*this);
+        Stream >> setbase(Radix) >> I;
+        if (Stream.fail())
             return 0;
     #endif
 
     //Rounded
-    if (Options==Ztring_Rounded && find(_T("."))!=std::string::npos)
+    if (Options==Ztring_Rounded && find(__T('.'))!=std::string::npos)
     {
         float32 F=To_float32();
         F-=I;
@@ -1553,24 +1885,24 @@ int16s Ztring::To_int16s (int8u Radix, ztring_t Options) const
 
     //Conversion
     int I;
-    #ifdef __MINGW32__
-        I=_ttoi(c_str());
-    #elif defined(__sun__)
-        #ifdef UNICODE
+    #if defined(STREAM_MISSING)
+        #ifdef __MINGW32__
+            I=_ttoi(c_str());
+        #elif defined(UNICODE)
             std::string S=To_UTF8();
             I=atoi(S.c_str());
-        #else //UNICODE
+        #else //defined(UNICODE)
             I=atoi(c_str());
-        #endif //UNICODE
+        #endif //defined(UNICODE)
     #else
-        tStringStream SS(*this);
-        SS >> setbase(Radix) >> I;
-        if (SS.fail())
+        tStringStream Stream(*this);
+        Stream >> setbase(Radix) >> I;
+        if (Stream.fail())
             return 0;
     #endif
 
     //Rounded
-    if (Options==Ztring_Rounded && find(_T("."))!=Error)
+    if (Options==Ztring_Rounded && find(__T('.'))!=Error)
     {
         float80 F=To_float80();
         F-=I;
@@ -1591,24 +1923,24 @@ int16u Ztring::To_int16u (int8u Radix, ztring_t Options) const
 
     //Conversion
     unsigned int I;
-    #ifdef __MINGW32__
-        I=_ttoi64(c_str()); //TODO : I>0x7FFFFFFF - Replaced by i64 version to support, but not good
-    #elif defined(__sun__)
-        #ifdef UNICODE
+    #if defined(STREAM_MISSING)
+        #ifdef __MINGW32__
+            I=_ttoi64(c_str()); //TODO : I>0x7FFFFFFF - Replaced by i64 version to support, but not good
+        #elif defined(UNICODE)
             std::string S=To_UTF8();
             I=atoi(S.c_str());
-        #else //UNICODE
+        #else //defined(UNICODE)
             I=atoi(c_str());
-        #endif //UNICODE
+        #endif //defined(UNICODE)
     #else
-        tStringStream SS(*this);
-        SS >> setbase(Radix) >> I;
-        if (SS.fail())
+        tStringStream Stream(*this);
+        Stream >> setbase(Radix) >> I;
+        if (Stream.fail())
             return 0;
     #endif
 
     //Rounded
-    if (Options==Ztring_Rounded && find(_T("."))!=std::string::npos)
+    if (Options==Ztring_Rounded && find(__T('.'))!=std::string::npos)
     {
         float32 F=To_float32();
         F-=I;
@@ -1629,24 +1961,24 @@ int32s Ztring::To_int32s (int8u Radix, ztring_t Options) const
 
     //Conversion
     int32s I;
-    #ifdef __MINGW32__
-        I=_ttoi(c_str());
-    #elif defined(__sun__)
-        #ifdef UNICODE
+    #if defined(STREAM_MISSING)
+        #ifdef __MINGW32__
+            I=_ttoi(c_str());
+        #elif defined(UNICODE)
             std::string S=To_UTF8();
-            I=atoi(S.c_str());
-        #else //UNICODE
-            I=atoi(c_str());
-        #endif //UNICODE
+            I=atol(S.c_str());
+        #else //defined(UNICODE)
+            I=atol(c_str());
+        #endif //defined(UNICODE)
     #else
-        tStringStream SS(*this);
-        SS >> setbase(Radix) >> I;
-        if (SS.fail())
+        tStringStream Stream(*this);
+        Stream >> setbase(Radix) >> I;
+        if (Stream.fail())
             return 0;
     #endif
 
     //Rounded
-    if (Options==Ztring_Rounded && find(_T("."))!=Error)
+    if (Options==Ztring_Rounded && find(__T('.'))!=Error)
     {
         float80 F=To_float80();
         F-=I;
@@ -1667,24 +1999,24 @@ int32u Ztring::To_int32u (int8u Radix, ztring_t Options) const
 
     //Conversion
     int32u I;
-    #ifdef __MINGW32__
-        I=_ttoi64(c_str()); //TODO : I>0x7FFFFFFF - Replaced by i64 version to support, but not good
-    #elif defined(__sun__)
-        #ifdef UNICODE
+    #if defined(STREAM_MISSING)
+        #ifdef __MINGW32__
+            I=_ttoi64(c_str()); //TODO : I>0x7FFFFFFF - Replaced by i64 version to support, but not good
+        #elif defined(UNICODE)
             std::string S=To_UTF8();
-            I=atoi(S.c_str());
-        #else //UNICODE
-            I=atoi(c_str());
-        #endif //UNICODE
+            I=atol(S.c_str());
+        #else //defined(UNICODE)
+            I=atol(c_str());
+        #endif //defined(UNICODE)
     #else
-        tStringStream SS(*this);
-        SS >> setbase(Radix) >> I;
-        if (SS.fail())
+        tStringStream Stream(*this);
+        Stream >> setbase(Radix) >> I;
+        if (Stream.fail())
             return 0;
     #endif
 
     //Rounded
-    if (Options==Ztring_Rounded && find(_T("."))!=std::string::npos)
+    if (Options==Ztring_Rounded && find(__T('.'))!=std::string::npos)
     {
         float32 F=To_float32();
         F-=I;
@@ -1705,24 +2037,24 @@ int64s Ztring::To_int64s (int8u Radix, ztring_t Options) const
 
     //Conversion
     int64s I;
-    #ifdef __MINGW32__
-        I=_ttoi64(c_str());
-    #elif defined(__sun__)
-        #ifdef UNICODE
-             std::string S=To_UTF8();
-            I=atoi(S.c_str());
-       #else //UNICODE
-            I=atoi(c_str()); //TODO : int64u (this is int32u only)
-        #endif //UNICODE
+    #if defined(STREAM_MISSING)
+        #ifdef __MINGW32__
+            I=_ttoi64(c_str());
+        #elif defined(UNICODE)
+            std::string S=To_UTF8();
+            I=atoll(S.c_str());
+        #else //defined(UNICODE)
+            I=atoll(c_str());
+        #endif //defined(UNICODE)
     #else
-        tStringStream SS(*this);
-        SS >> setbase(Radix) >> I;
-        if (SS.fail())
+        tStringStream Stream(*this);
+        Stream >> setbase(Radix) >> I;
+        if (Stream.fail())
             return 0;
     #endif
 
     //Rounded
-    if (Options==Ztring_Rounded && find(_T("."))!=std::string::npos)
+    if (Options==Ztring_Rounded && find(__T('.'))!=std::string::npos)
     {
         float32 F=To_float32();
         F-=I;
@@ -1743,24 +2075,24 @@ int64u Ztring::To_int64u (int8u Radix, ztring_t Options) const
 
     //Conversion
     int64u I;
-    #ifdef __MINGW32__
-        I=_ttoi64(c_str()); //TODO : I>0x7FFFFFFFFFFFFFFF
-    #elif defined(__sun__)
-        #ifdef UNICODE
-             std::string S=To_UTF8();
-            I=atoi(S.c_str());
-       #else //UNICODE
-            I=atoi(c_str()); //TODO : int64u (this is int32u only)
-        #endif //UNICODE
+    #if defined(STREAM_MISSING)
+        #ifdef __MINGW32__
+            I=_ttoi64(c_str()); //TODO : I>0x7FFFFFFFFFFFFFFF
+        #elif defined(UNICODE)
+            std::string S=To_UTF8();
+            I=atoll(S.c_str());
+        #else //defined(UNICODE)
+            I=atoll(c_str());
+        #endif //defined(UNICODE)
     #else
-        tStringStream SS(*this);
-        SS >> setbase(Radix) >> I;
-        if (SS.fail())
+        tStringStream Stream(*this);
+        Stream >> setbase(Radix) >> I;
+        if (Stream.fail())
             return 0;
     #endif
 
     //Rounded
-    if (Options==Ztring_Rounded && find(_T("."))!=std::string::npos)
+    if (Options==Ztring_Rounded && find(__T('.'))!=std::string::npos)
     {
         float32 F=To_float32();
         F-=I;
@@ -1772,7 +2104,7 @@ int64u Ztring::To_int64u (int8u Radix, ztring_t Options) const
 }
 
 //---------------------------------------------------------------------------
-int128u Ztring::To_int128u (int8u Radix, ztring_t Options) const
+int128u Ztring::To_int128u (int8u, ztring_t) const
 {
     if (size()!=32)
         return 0;
@@ -1781,22 +2113,22 @@ int128u Ztring::To_int128u (int8u Radix, ztring_t Options) const
 
     for (size_t Pos=0; Pos<32; Pos++)
     {
-        if ((Temp[Pos]< _T('0') || Temp[Pos]> _T('9'))
-         && (Temp[Pos]< _T('A') || Temp[Pos]> _T('F'))
-         && (Temp[Pos]< _T('a') || Temp[Pos]> _T('f')))
+        if ((Temp[Pos]< __T('0') || Temp[Pos]> __T('9'))
+         && (Temp[Pos]< __T('A') || Temp[Pos]> __T('F'))
+         && (Temp[Pos]< __T('a') || Temp[Pos]> __T('f')))
             return 0;
-        if (Temp[Pos]>=_T('A') && Temp[Pos]<=_T('F'))
+        if (Temp[Pos]>=__T('A') && Temp[Pos]<=__T('F'))
         {
-            Temp[Pos]-=_T('A');
-            Temp[Pos]+=_T('9')+1;
+            Temp[Pos]-=__T('A');
+            Temp[Pos]+=__T('9')+1;
         }
-        if (Temp[Pos]>=_T('a') && Temp[Pos]<=_T('f'))
+        if (Temp[Pos]>=__T('a') && Temp[Pos]<=__T('f'))
         {
-            Temp[Pos]-=_T('a');
-            Temp[Pos]+=_T('9')+1;
+            Temp[Pos]-=__T('a');
+            Temp[Pos]+=__T('9')+1;
         }
     }
-    
+
     int128u I;
     I.hi=((int64u)((int8u)(Temp[ 0]-'0'))<<60)
        | ((int64u)((int8u)(Temp[ 1]-'0'))<<56)
@@ -1843,7 +2175,7 @@ float32 Ztring::To_float32(ztring_t) const
         return 0;
 
     //Conversion
-    #if defined(__MINGW32__) || defined(__sun__)
+    #if defined(STREAM_MISSING)
         #ifdef UNICODE
             return (wcstod(c_str(),NULL));
         #else
@@ -1851,9 +2183,9 @@ float32 Ztring::To_float32(ztring_t) const
         #endif
     #else
         float32 F;
-        tStringStream SS(*this);
-        SS >> F;
-        if (SS.fail())
+        tStringStream Stream(*this);
+        Stream >> F;
+        if (Stream.fail())
             return 0;
 
         return F;
@@ -1869,17 +2201,17 @@ float64 Ztring::To_float64(ztring_t) const
         return 0;
 
     //Conversion
-    #if defined(__MINGW32__) || defined(__sun__)
+    #if defined(STREAM_MISSING)
         #ifdef UNICODE
-            return (wcstod(c_str(),NULL));
+            return (wcstod(c_str(),NULL)); //TODO verify no wcstold
         #else
-            return (strtod(c_str(),NULL));
+            return (strtod(c_str(),NULL)); //TODO verify no strtold
         #endif
     #else
         float64 F;
-        tStringStream SS(*this);
-        SS >> F;
-        if (SS.fail())
+        tStringStream Stream(*this);
+        Stream >> F;
+        if (Stream.fail())
             return 0;
 
         return F;
@@ -1895,17 +2227,17 @@ float80 Ztring::To_float80(ztring_t) const
         return 0;
 
     //Conversion
-    #if defined(__MINGW32__) || defined(__sun__)
+    #if defined(STREAM_MISSING)
         #ifdef UNICODE
-            return (wcstod(c_str(),NULL));
+            return (wcstod(c_str(),NULL)); //TODO verify no wcstold
         #else
-            return (strtod(c_str(),NULL));
+            return (strtod(c_str(),NULL)); //TODO verify no strtold
         #endif
     #else
         float80 F;
-        tStringStream SS(*this);
-        SS >> F;
-        if (SS.fail())
+        tStringStream Stream(*this);
+        Stream >> F;
+        if (Stream.fail())
             return 0;
 
         return F;
@@ -1920,14 +2252,14 @@ float80 Ztring::To_float80(ztring_t) const
 // Retourne une partie de la chaine
 Ztring Ztring::SubString (const tstring &Begin, const tstring &End, size_type Pos, ztring_t Options) const
 {
-    //Recherche Début
+    //Recherche Debut
     size_type I_Debut=find(Begin, Pos);
     if (I_Debut==Error)
-        return _T("");
+        return Ztring();
     I_Debut+=Begin.size();
 
     //gestion fin NULL
-    if (End==_T(""))
+    if (End.empty())
         return substr(I_Debut);
 
     //Recherche Fin
@@ -1937,7 +2269,7 @@ Ztring Ztring::SubString (const tstring &Begin, const tstring &End, size_type Po
         if (Options & Ztring_AddLastItem)
             return substr(I_Debut);
         else
-            return _T("");
+            return Ztring();
     }
 
     return substr(I_Debut, I_Fin-I_Debut);
@@ -1972,7 +2304,7 @@ bool Ztring::IsNumber() const
     bool OK=true;
     size_t Size=size();
     for (size_t Pos=0; Pos<Size; Pos++)
-        if (operator[](Pos)<_T('0') || operator[](Pos)>_T('9'))
+        if (operator[](Pos)<__T('0') || operator[](Pos)>__T('9'))
         {
             OK=false;
             break;
@@ -2065,13 +2397,13 @@ bool Ztring::Compare (const Ztring &ToCompare, const Ztring &Comparator, ztring_
     {
         int64s Left=To_int64s();
         int64s Right=ToCompare.To_int64s();
-        if (Comparator==_T("==")) return (Left==Right);
-        if (Comparator==_T("<"))  return (Left< Right);
-        if (Comparator==_T("<=")) return (Left<=Right);
-        if (Comparator==_T(">=")) return (Left>=Right);
-        if (Comparator==_T(">"))  return (Left> Right);
-        if (Comparator==_T("!=")) return (Left!=Right);
-        if (Comparator==_T("<>")) return (Left!=Right);
+        if (Comparator==__T("==")) return (Left==Right);
+        if (Comparator==__T("<"))  return (Left< Right);
+        if (Comparator==__T("<=")) return (Left<=Right);
+        if (Comparator==__T(">=")) return (Left>=Right);
+        if (Comparator==__T(">"))  return (Left> Right);
+        if (Comparator==__T("!=")) return (Left!=Right);
+        if (Comparator==__T("<>")) return (Left!=Right);
         return false;
     }
 
@@ -2085,27 +2417,27 @@ bool Ztring::Compare (const Ztring &ToCompare, const Ztring &Comparator, ztring_
         Right.MakeLowerCase();
 
         //string comparasion
-        if (Comparator==_T("==")) return (Left==Right);
-        if (Comparator==_T("IN")) {if (Left.find(Right)!=string::npos) return true; else return false;}
-        if (Comparator==_T("<"))  return (Left< Right);
-        if (Comparator==_T("<=")) return (Left<=Right);
-        if (Comparator==_T(">=")) return (Left>=Right);
-        if (Comparator==_T(">"))  return (Left> Right);
-        if (Comparator==_T("!=")) return (Left!=Right);
-        if (Comparator==_T("<>")) return (Left!=Right);
+        if (Comparator==__T("==")) return (Left==Right);
+        if (Comparator==__T("IN")) {if (Left.find(Right)!=string::npos) return true; else return false;}
+        if (Comparator==__T("<"))  return (Left< Right);
+        if (Comparator==__T("<=")) return (Left<=Right);
+        if (Comparator==__T(">=")) return (Left>=Right);
+        if (Comparator==__T(">"))  return (Left> Right);
+        if (Comparator==__T("!=")) return (Left!=Right);
+        if (Comparator==__T("<>")) return (Left!=Right);
         return false;
     }
     else
     {
         //string comparasion
-        if (Comparator==_T("==")) return (*this==ToCompare);
-        if (Comparator==_T("IN")) {if (this->find(ToCompare)!=string::npos) return true; else return false;}
-        if (Comparator==_T("<"))  return (*this< ToCompare);
-        if (Comparator==_T("<=")) return (*this<=ToCompare);
-        if (Comparator==_T(">=")) return (*this>=ToCompare);
-        if (Comparator==_T(">"))  return (*this> ToCompare);
-        if (Comparator==_T("!=")) return (*this!=ToCompare);
-        if (Comparator==_T("<>")) return (*this!=ToCompare);
+        if (Comparator==__T("==")) return (*this==ToCompare);
+        if (Comparator==__T("IN")) {if (this->find(ToCompare)!=string::npos) return true; else return false;}
+        if (Comparator==__T("<"))  return (*this< ToCompare);
+        if (Comparator==__T("<=")) return (*this<=ToCompare);
+        if (Comparator==__T(">=")) return (*this>=ToCompare);
+        if (Comparator==__T(">"))  return (*this> ToCompare);
+        if (Comparator==__T("!=")) return (*this!=ToCompare);
+        if (Comparator==__T("<>")) return (*this!=ToCompare);
         return false;
     }
 }

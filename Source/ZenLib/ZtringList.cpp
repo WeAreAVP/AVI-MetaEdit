@@ -1,34 +1,22 @@
-// ZenLib::ZtringList - More methods for vector<std::(w)string>
-// Copyright (C) 2002-2010 MediaArea.net SARL, Info@MediaArea.net
-//
-// This software is provided 'as-is', without any express or implied
-// warranty.  In no event will the authors be held liable for any damages
-// arising from the use of this software.
-//
-// Permission is granted to anyone to use this software for any purpose,
-// including commercial applications, and to alter it and redistribute it
-// freely, subject to the following restrictions:
-//
-// 1. The origin of this software must not be misrepresented; you must not
-//    claim that you wrote the original software. If you use this software
-//    in a product, an acknowledgment in the product documentation would be
-//    appreciated but is not required.
-// 2. Altered source versions must be plainly marked as such, and must not be
-//    misrepresented as being the original software.
-// 3. This notice may not be removed or altered from any source distribution.
-//
-//++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
-//++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+/*  Copyright (c) MediaArea.net SARL. All Rights Reserved.
+ *
+ *  Use of this source code is governed by a zlib-style license that can
+ *  be found in the License.txt file in the root of the source tree.
+ */
 
 //---------------------------------------------------------------------------
-#include "ZenLib/Conf_Internal.h"
+#include "ZenLib/PreComp.h"
 #ifdef __BORLANDC__
     #pragma hdrstop
 #endif
 //---------------------------------------------------------------------------
+
+//---------------------------------------------------------------------------
+#include "ZenLib/Conf_Internal.h"
+//---------------------------------------------------------------------------
+
 //---------------------------------------------------------------------------
 #include <algorithm>
-#include <functional>
 #include "ZenLib/ZtringList.h"
 using namespace std;
 #if defined(_MSC_VER) && _MSC_VER <= 1200
@@ -53,8 +41,8 @@ extern Ztring EmptyZtring;
 ZtringList::ZtringList ()
 : std::vector<ZenLib::Ztring, std::allocator<ZenLib::Ztring> > ()
 {
-    Separator[0]=_T(";");
-    Quote=_T("\"");
+    Separator[0]=__T(";");
+    Quote=__T("\"");
     Max[0]=Error;
 }
 
@@ -71,16 +59,16 @@ ZtringList::ZtringList(const ZtringList &Source)
 
 ZtringList::ZtringList (const Ztring &Source)
 {
-    Separator[0]=_T(";");
-    Quote=_T("\"");
+    Separator[0]=__T(";");
+    Quote=__T("\"");
     Max[0]=Error;
     Write(Source.c_str());
 }
 
 ZtringList::ZtringList (const Char *Source)
 {
-    Separator[0]=_T(";");
-    Quote=_T("\"");
+    Separator[0]=__T(";");
+    Quote=__T("\"");
     Max[0]=Error;
     Write(Source);
 }
@@ -125,6 +113,8 @@ ZtringList &ZtringList::operator+= (const ZtringList &Source)
 // Operator =
 ZtringList &ZtringList::operator= (const ZtringList &Source)
 {
+    if (this == &Source)
+       return *this;
     clear();
     Ztring C=Separator[0];
     Ztring Q=Quote;
@@ -146,7 +136,7 @@ ZtringList &ZtringList::operator= (const ZtringList &Source)
 Ztring &ZtringList::operator() (size_type Pos)
 {
     if (Pos>=size())
-        Write(_T(""), Pos);
+        Write(Ztring(), Pos);
 
     return operator[](Pos);
 }
@@ -161,10 +151,10 @@ Ztring ZtringList::Read () const
 {
     //Integrity
     if (size()==0)
-        return _T("");
+        return Ztring();
 
     Ztring Retour;
-    Ztring ToFind=Separator[0]+Quote[0]+_T("\r\n");
+    Ztring ToFind=Separator[0]+Quote[0]+__T("\r\n");
     for (size_type Pos=0; Pos<size(); Pos++)
     {
         if (operator[](Pos).find_first_of(ToFind)==std::string::npos)
@@ -188,7 +178,8 @@ Ztring ZtringList::Read () const
     }
 
     //delete all useless separators at the end
-    while (Retour.find(Separator[0].c_str(), Retour.size()-Separator[0].size())!=std::string::npos)
+    //while (Retour.find(Separator[0].c_str(), Retour.size()-Separator[0].size())!=std::string::npos)
+    if (Retour.find(Separator[0].c_str(), Retour.size()-Separator[0].size())!=std::string::npos)
         Retour.resize(Retour.size()-Separator[0].size());
 
     return Retour;
@@ -209,7 +200,7 @@ void ZtringList::Write(const Ztring &ToWrite)
 {
     clear();
 
-    if (!&ToWrite || !ToWrite.size())
+    if (ToWrite.empty())
         return;
 
     size_type PosC=0;
@@ -296,7 +287,7 @@ void ZtringList::Swap (size_type Pos0_A, size_type Pos0_B)
     else
         Pos_Max=Pos0_A;
     if (Pos_Max>=size())
-        Write(_T(""), Pos_Max);
+        Write(Ztring(), Pos_Max);
 
     operator [] (Pos0_A).swap(operator [] (Pos0_B));
 }
@@ -365,9 +356,3 @@ void ZtringList::Max_Set (size_type Level, size_type Max_New)
 }
 
 } //namespace
-
-
-
-
-
-

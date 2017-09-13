@@ -1,22 +1,9 @@
-// ZenLib::ZtringListListF - ZtringListList with file load/save
-// Copyright (C) 2002-2010 MediaArea.net SARL, Info@MediaArea.net
-//
-// This software is provided 'as-is', without any express or implied
-// warranty.  In no event will the authors be held liable for any damages
-// arising from the use of this software.
-//
-// Permission is granted to anyone to use this software for any purpose,
-// including commercial applications, and to alter it and redistribute it
-// freely, subject to the following restrictions:
-//
-// 1. The origin of this software must not be misrepresented; you must not
-//    claim that you wrote the original software. If you use this software
-//    in a product, an acknowledgment in the product documentation would be
-//    appreciated but is not required.
-// 2. Altered source versions must be plainly marked as such, and must not be
-//    misrepresented as being the original software.
-// 3. This notice may not be removed or altered from any source distribution.
-//
+/*  Copyright (c) MediaArea.net SARL. All Rights Reserved.
+ *
+ *  Use of this source code is governed by a zlib-style license that can
+ *  be found in the License.txt file in the root of the source tree.
+ */
+
 //+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 //
 // ZtringListList with file load/save
@@ -24,11 +11,16 @@
 //+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 
 //---------------------------------------------------------------------------
-#include "ZenLib/Conf_Internal.h"
+#include "ZenLib/PreComp.h"
 #ifdef __BORLANDC__
     #pragma hdrstop
 #endif
 //---------------------------------------------------------------------------
+
+//---------------------------------------------------------------------------
+#include "ZenLib/Conf_Internal.h"
+//---------------------------------------------------------------------------
+
 //---------------------------------------------------------------------------
 #include "ZenLib/ZtringListListF.h"
 #include "ZenLib/File.h"
@@ -105,9 +97,9 @@ bool ZtringListListF::Load (const Ztring &NewFileName)
 
     size_t I1=Error;
 
-    if (Name.find(_T(".csv"))!=Error)
+    if (Name.find(__T(".csv"))!=Error)
         I1=CSV_Charger();
-    if (Name.find(_T(".cfg"))!=Error)
+    if (Name.find(__T(".cfg"))!=Error)
         I1=CFG_Charger();
     if (I1!=Error)
     {
@@ -123,7 +115,10 @@ bool ZtringListListF::Load (const Ztring &NewFileName)
 bool ZtringListListF::CSV_Charger ()
 {
     //Read file
-    File F(Name);
+    File F;
+    if (!F.Open(Name))
+        return false;
+
     int8u* Buffer=new int8u[(size_t)F.Size_Get()+1];
     size_t BytesCount=F.Read(Buffer, (size_t)F.Size_Get());
     F.Close();
@@ -150,10 +145,10 @@ bool ZtringListListF::CSV_Charger ()
         File.From_Local((char*)Buffer, 0, BytesCount);
 
     //Separators
-    if (Separator[0]==_T("(Default)"))
+    if (Separator[0]==__T("(Default)"))
             Separator[0]=EOL;
     Ztring SeparatorT=Separator[1];
-    Separator[1]=_T(";");
+    Separator[1]=__T(";");
 
     //Writing
     Write(File);
@@ -189,27 +184,27 @@ bool ZtringListListF::CFG_Charger ()
     List.Write(Z1);
 
     Ztring SeparatorT=Separator[1];
-    Separator[1]=_T(";");
+    Separator[1]=__T(";");
 
     Ztring Propriete, Valeur, Commentaire;
 
     for (size_t Pos=0; Pos<List.size(); Pos++)
     {
-        Ztring &Lu=List(Pos);
-        if (Lu.find(_T("="))>0)
+        const Ztring &Lu=List(Pos);
+        if (Lu.find(__T('='))>0)
         {
             //Obtention du Name
-            Propriete=Lu.SubString(_T(""), _T("="));
-            Propriete.Trim();
+            Propriete=Lu.SubString(Ztring(), __T("="));
+            NettoyerEspaces(Propriete);
             //Obtention de la valeur
-            Valeur=Lu.SubString(_T("="), _T(";"), 0, Ztring_AddLastItem);
-            Valeur.Trim();
+            Valeur=Lu.SubString(__T("="), __T(";"), 0, Ztring_AddLastItem);
+            NettoyerEspaces(Valeur);
         }
         //Obtention du commentaire
-        Commentaire=Lu.SubString(_T(";"), _T(""), 0, Ztring_AddLastItem);
-        Commentaire.Trim();
+        Commentaire=Lu.SubString(__T(";"), Ztring(), 0, Ztring_AddLastItem);
+        NettoyerEspaces(Commentaire);
         //Ecriture
-        push_back((Propriete+_T(";")+Valeur+_T(";")+Commentaire).c_str()); //Visual C++ 6 is old...
+        push_back((Propriete+__T(";")+Valeur+__T(";")+Commentaire).c_str()); //Visual C++ 6 is old...
     }
     Separator[1]=SeparatorT;
 
@@ -225,7 +220,7 @@ bool ZtringListListF::Save (const Ztring &FileName)
     if (!Sauvegarde)
         return true;
 
-    if (FileName!=_T(""))
+    if (FileName!=Ztring())
         Name=FileName;
 
     //Gestion des backups
@@ -237,23 +232,23 @@ bool ZtringListListF::Save (const Ztring &FileName)
         //TODO : not tested
         for (int8u I1=Backup_Nb_Max-1; I1>0; I1--)
         {
-            Ztring Z1=Name+_T(".sav"); Z1+=Ztring::ToZtring(I1);
-            Ztring Z2=Name+_T(".sav"); Z2+=Ztring::ToZtring(I1+1);
+            Ztring Z1=Name+__T(".sav"); Z1+=Ztring::ToZtring(I1);
+            Ztring Z2=Name+__T(".sav"); Z2+=Ztring::ToZtring(I1+1);
             File::Delete(Z2.c_str());
             I2=File::Move(Z1.c_str(), Z2.c_str());
             if (I2 && !Backup_Nb)
                 Backup_Nb=I2;
         }
-        Ztring Z1=Name+_T(".sav0");
+        Ztring Z1=Name+__T(".sav0");
         File::Delete(Z1.c_str());
         File::Move(Name.c_str(), Z1.c_str());
         Backup_Nb++;
     }
 
     I2=0;
-    if (Name.find(_T(".csv"))!=Error)
+    if (Name.find(__T(".csv"))!=Error)
         I2=CSV_Sauvegarder();
-    if (Name.find(_T(".cfg"))!=Error)
+    if (Name.find(__T(".cfg"))!=Error)
         I2=CFG_Sauvegarder();
 
     if (I2>0)
@@ -273,7 +268,7 @@ bool ZtringListListF::CSV_Sauvegarder ()
     if (!F.Create(Name, true))
         return Error;
 
-    if (Separator[0]==_T("(Default)"))
+    if (Separator[0]==__T("(Default)"))
         Separator[0]=EOL;
 
     F.Write(Read());
@@ -298,15 +293,15 @@ bool ZtringListListF::CFG_Sauvegarder ()
         Propriete=Read(Pos, 0);
         Valeur=Read(Pos, 1);
         Commentaire=Read(Pos, 2);
-        if (Propriete!=_T(""))
+        if (Propriete!=Ztring())
         {
-            ToWrite+=Propriete+_T(" = ");
-            if (Valeur!=_T(""))
-                ToWrite+=Valeur+_T(" ");
+            ToWrite+=Propriete+__T(" = ");
+            if (Valeur!=Ztring())
+                ToWrite+=Valeur+__T(" ");
         }
-        if (Commentaire!=_T(""))
-            ToWrite+=_T("; ")+Commentaire;
-        ToWrite+=_T(EOL);
+        if (Commentaire!=Ztring())
+            ToWrite+=__T("; ")+Commentaire;
+        ToWrite+=EOL;
     }
     F.Write(ToWrite);
 
@@ -317,17 +312,17 @@ bool ZtringListListF::CFG_Sauvegarder ()
 // Annulation
 bool ZtringListListF::Cancel ()
 {
-    Ztring Z1=Name+_T(".sav0"); //Visual C++ 6 patch
+    Ztring Z1=Name+__T(".sav0"); //Visual C++ 6 patch
     File::Delete(Name.c_str());
     File::Move(Z1.c_str(), Name.c_str());
     for (int8u I1=1; I1<=Backup_Nb; I1++)
     {
-        Ztring Z2=Name+_T(".sav"); Z2+=Ztring::ToZtring(I1); //Visual C++ 6 patch
-        Ztring Z3=Name+_T(".sav"); Z3+=Ztring::ToZtring(I1-1); //Visual C++ 6 patch
+        Ztring Z2=Name+__T(".sav"); Z2+=Ztring::ToZtring(I1); //Visual C++ 6 patch
+        Ztring Z3=Name+__T(".sav"); Z3+=Ztring::ToZtring(I1-1); //Visual C++ 6 patch
         File::Delete(Z3.c_str());
         File::Move(Z2.c_str(), Z3.c_str());
     }
-    Write(_T(""));
+    Write(Ztring());
     return CSV_Charger();
 }
 
@@ -340,15 +335,15 @@ bool ZtringListListF::Cancel ()
 bool ZtringListListF::NettoyerEspaces (Ztring &ANettoyer)
 {
     size_t Debut=0;
-    while (Debut<ANettoyer.size() && ANettoyer[Debut]==_T(' '))
+    while (Debut<ANettoyer.size() && ANettoyer[Debut]==__T(' '))
         Debut++;
     size_t Fin=ANettoyer.size()-1;
-    while (Fin!=(size_t)-2 && ANettoyer[Fin]==_T(' '))
+    while (Fin!=(size_t)-1 && ANettoyer[Fin]==__T(' '))
         Fin--;
     if (Fin>=Debut)
         ANettoyer=ANettoyer.substr(Debut, Fin-Debut+1);
     else
-        ANettoyer=_T("");
+        ANettoyer=Ztring();
     return true;
 }
 
@@ -373,4 +368,3 @@ void ZtringListListF::Local_Set (bool NewLocal)
 }
 
 } //Namespace
-

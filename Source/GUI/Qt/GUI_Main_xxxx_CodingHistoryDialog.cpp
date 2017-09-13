@@ -686,9 +686,9 @@ void GUI_Main_xxxx_CodingHistoryDialog::Text2List ()
                 Ununderstable=true;
             if (Column==Data_Pos)
             {
-                if (Value.size()>=2 && Value[1]==_T('='))
+                if (Value.size()>=2 && Value[1]==__T('='))
                     Value.erase(0, 2);
-                if (Value.size()>=3 && Value[2]==_T('='))
+                if (Value.size()>=3 && Value[2]==__T('='))
                     Value.erase(0, 3);
                 QTableWidgetItem* Item=new QTableWidgetItem(QString().fromUtf8(Value.To_Local().c_str()));
             

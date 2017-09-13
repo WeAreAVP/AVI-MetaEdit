@@ -39,7 +39,7 @@ Ztring
     //---------------------------------------------------------------------------
 void MediaInfo_Config_CodecID_Video_Riff (InfoMap &Info)
 {
-    Info.Separator_Set(0, _T("\n"));
+    Info.Separator_Set(0, __T("\n"));
     Info.Write(Ztring().From_UTF8(
     "0x00000000;RGB;;Basic Windows bitmap format. 1, 4 and 8 bpp versions are palettised. 16, 24 and 32bpp contain raw RGB samples;http://www.fourcc.org/indexrgb.htm;;;;\n"
     "0x00000001;RLE;;Run length encoded 8bpp RGB image;http://www.fourcc.org/indexrgb.htm;;;;\n"
@@ -755,7 +755,7 @@ void MediaInfo_Config_CodecID_Video_Riff (InfoMap &Info)
 //---------------------------------------------------------------------------
 void MediaInfo_Config_CodecID_Audio_Riff (InfoMap &Info)
 {
-    Info.Separator_Set(0, _T("\n"));
+    Info.Separator_Set(0, __T("\n"));
     Info.Write(Ztring().From_UTF8(
     "0;;;;\n"
     "1;PCM;;;http://www.microsoft.com/windows/\n"

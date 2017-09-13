@@ -1,30 +1,20 @@
-// ZenLib::ZtringListList - More methods for std::vector<std::vector<std::(w)string>>
-// Copyright (C) 2002-2010 MediaArea.net SARL, Info@MediaArea.net
-//
-// This software is provided 'as-is', without any express or implied
-// warranty.  In no event will the authors be held liable for any damages
-// arising from the use of this software.
-//
-// Permission is granted to anyone to use this software for any purpose,
-// including commercial applications, and to alter it and redistribute it
-// freely, subject to the following restrictions:
-//
-// 1. The origin of this software must not be misrepresented; you must not
-//    claim that you wrote the original software. If you use this software
-//    in a product, an acknowledgment in the product documentation would be
-//    appreciated but is not required.
-// 2. Altered source versions must be plainly marked as such, and must not be
-//    misrepresented as being the original software.
-// 3. This notice may not be removed or altered from any source distribution.
-//
-//++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+/*  Copyright (c) MediaArea.net SARL. All Rights Reserved.
+ *
+ *  Use of this source code is governed by a zlib-style license that can
+ *  be found in the License.txt file in the root of the source tree.
+ */
 
 //---------------------------------------------------------------------------
-#include "ZenLib/Conf_Internal.h"
+#include "ZenLib/PreComp.h"
 #ifdef __BORLANDC__
     #pragma hdrstop
 #endif
 //---------------------------------------------------------------------------
+
+//---------------------------------------------------------------------------
+#include "ZenLib/Conf_Internal.h"
+//---------------------------------------------------------------------------
+
 //---------------------------------------------------------------------------
 #include <algorithm>
 #include "ZenLib/ZtringListList.h"
@@ -52,8 +42,8 @@ ZtringListList::ZtringListList()
 : std::vector<ZenLib::ZtringList, std::allocator<ZenLib::ZtringList> > ()
 {
     Separator[0]=EOL;
-    Separator[1]=_T(";");
-    Quote=_T("\"");
+    Separator[1]=__T(";");
+    Quote=__T("\"");
     Max[0]=Error;
     Max[1]=Error;
 }
@@ -73,9 +63,9 @@ ZtringListList::ZtringListList(const ZtringListList &Source)
 
 ZtringListList::ZtringListList(const Ztring &Source)
 {
-    Separator[0]=_T("\r\n");
-    Separator[1]=_T(";");
-    Quote=_T("\"");
+    Separator[0]=EOL;
+    Separator[1]=__T(";");
+    Quote=__T("\"");
     Max[0]=Error;
     Max[1]=Error;
     Write(Source.c_str());
@@ -83,9 +73,9 @@ ZtringListList::ZtringListList(const Ztring &Source)
 
 ZtringListList::ZtringListList(const Char *Source)
 {
-    Separator[0]=_T("\r\n");
-    Separator[1]=_T(";");
-    Quote=_T("\"");
+    Separator[0]=EOL;
+    Separator[1]=__T(";");
+    Quote=__T("\"");
     Max[0]=Error;
     Max[1]=Error;
     Write(Source);
@@ -94,9 +84,9 @@ ZtringListList::ZtringListList(const Char *Source)
 #ifdef _UNICODE
 ZtringListList::ZtringListList (const char* S)
 {
-    Separator[0]=_T("\r\n");
-    Separator[1]=_T(";");
-    Quote=_T("\"");
+    Separator[0]=EOL;
+    Separator[1]=__T(";");
+    Quote=__T("\"");
     Max[0]=Error;
     Max[1]=Error;
     Write(Ztring(S));
@@ -141,6 +131,8 @@ ZtringListList &ZtringListList::operator+= (const ZtringListList &Source)
 // Operator =
 ZtringListList &ZtringListList::operator= (const ZtringListList &Source)
 {
+    if (this == &Source)
+        return *this;
     clear();
 
     reserve(Source.size());
@@ -161,7 +153,7 @@ ZtringList &ZtringListList::operator() (size_type Pos0)
 {
     //Integrity
     if (Pos0>=size())
-        Write(_T(""), Pos0);
+        Write(Ztring(), Pos0);
 
     return operator[](Pos0);
 }
@@ -170,7 +162,7 @@ Ztring &ZtringListList::operator() (size_type Pos0, size_type Pos1)
 {
     //Integrity
     if (Pos0>=size())
-        Write(_T(""), Pos0);
+        Write(Ztring(), Pos0);
 
     return operator[](Pos0).operator()(Pos1);
 }
@@ -203,7 +195,7 @@ Ztring ZtringListList::Read () const
 {
     //Integrity
     if (size()==0)
-        return _T("");
+        return Ztring();
 
     Ztring ToReturn;
     size_type Size=size()-1;
@@ -212,9 +204,9 @@ Ztring ZtringListList::Read () const
     ToReturn+=Read(Size);
 
     //Delete all useless separators at the end
-    if(ToReturn.size()>0 && Separator[0].size() && ToReturn(ToReturn.size()-1)==Separator[0][Separator[0].size()-1]) //Optimize speed
-        while (ToReturn.find(Separator[0].c_str(), ToReturn.size()-Separator[0].size())!=std::string::npos)
-            ToReturn.resize(ToReturn.size()-Separator[0].size());
+    //if(ToReturn.size()>0 && Separator[0].size() && ToReturn(ToReturn.size()-1)==Separator[0][Separator[0].size()-1]) //Optimize speed
+    //    while (ToReturn.find(Separator[0].c_str(), ToReturn.size()-Separator[0].size())!=std::string::npos)
+    //        ToReturn.resize(ToReturn.size()-Separator[0].size());
 
     return ToReturn;
 }
@@ -295,60 +287,137 @@ void ZtringListList::Write(const Ztring &ToWrite)
 {
     clear();
 
-    if (!&ToWrite || !ToWrite.size())
+    if (ToWrite.empty())
         return;
 
-    size_type PosC=0;
-    bool Fini=false;
-    Ztring C1;
-    ZtringList ZL1;
-    ZL1.Separator_Set(0, Separator[1]);
-    ZL1.Quote_Set(Quote);
-    ZL1.Max_Set(0, Max[1]);
-
-    do
+    //Detecting carriage return format
+    Ztring Separator0;
+    if (Separator[0]==EOL)
     {
-        //Searching end of line, but it must not be in quotes
-        bool InQuotes=false;
-        Ztring CharsToFind=Separator[0]+Quote;
-        size_t Pos_End=PosC;
-        while (Pos_End<ToWrite.size())
+        size_t CarriageReturn_Pos=ToWrite.find_first_of(__T("\r\n"));
+        if (CarriageReturn_Pos!=string::npos)
         {
-            Pos_End=ToWrite.find_first_of(CharsToFind, Pos_End);
-            if (Pos_End!=string::npos)
+            if (ToWrite[CarriageReturn_Pos]==__T('\r'))
             {
-                if (Pos_End+Quote.size()<ToWrite.size() && ToWrite[Pos_End]==Quote[0] && ToWrite[Pos_End+1]!=Quote[0])
-                {
-                    InQuotes=!InQuotes; //This is not double quotes, so this is a normal quote
-                    /*if (!InQuotes)
-                    {
-                        C1=ToWrite.substr(PosC, Pos_End-PosC); 
-                        break;
-                    }*/
-                }
+                if (CarriageReturn_Pos+1<ToWrite.size() && ToWrite[CarriageReturn_Pos+1]==__T('\n'))
+                    Separator0=__T("\r\n");
+                else
+                    Separator0=__T("\r");
+            }
+            else
+                Separator0=__T("\n");
+        }
+        else
+            Separator0=Separator[0];
+    }
+    else
+        Separator0=Separator[0];
 
-                if (!InQuotes && Pos_End+Separator[0].size()<=ToWrite.size() && ToWrite[Pos_End]==Separator[0][0])
+    size_t l=ToWrite.size();
+    size_t i=0;
+    bool q=false; //In quotes
+    size_t Quote_Size=Quote.size();
+    size_t Separator0_Size=Separator0.size();
+    size_t Separator1_Size=Separator[1].size();
+    size_t x=0, y=0;
+    while (i<l)
+    {
+        //Quote
+        if (i+Quote_Size<=l)
+        {
+            bool IsQuote=true;
+            for (size_t j=0; j<Quote_Size; j++)
+            {
+                if (ToWrite[i+j]!=Quote[j])
                 {
-                    C1=ToWrite.substr(PosC, Pos_End-PosC); 
+                    IsQuote=false;
                     break;
                 }
-                
-                if (InQuotes && Pos_End+Quote.size()*2<ToWrite.size() && ToWrite[Pos_End]==Quote[0] && ToWrite[Pos_End+1]==Quote[0])
-                    Pos_End+=2;
-                else
-                    Pos_End++;
+            }
+            if (IsQuote)
+            {
+                //Double quote
+                if (i+Quote_Size*2<=l)
+                {
+                    IsQuote=false;
+                    for (size_t j=0; j<Quote_Size; j++)
+                    {
+                        if (ToWrite[i+Quote_Size+j]!=Quote[j])
+                        {
+                            IsQuote=true;
+                            break;
+                        }
+                    }
+                    if (!IsQuote)
+                        i++; // 2 quote chars transformed to one unique quote
+                }
+                if (IsQuote)
+                {
+                    i+=Quote_Size;
+                    q=!q;
+                    continue;
+                }
             }
         }
-        if (Pos_End>=ToWrite.size())
-            C1=ToWrite.substr(PosC, string::npos);
 
-        ZL1.Write(C1);
-        push_back(ZL1);
-        PosC+=C1.size()+Separator[0].size();
-        if (PosC>=ToWrite.size())
-            Fini=true;
+        if (!q)
+        {
+            //Carriage return
+            if (i+Separator0_Size<=l)
+            {
+                bool IsSeparator0=true;
+                for (size_t j=0; j<Separator0_Size; j++)
+                {
+                    if (ToWrite[i+j]!= Separator0[j])
+                    {
+                        IsSeparator0=false;
+                        break;
+                    }
+                }
+                if (IsSeparator0)
+                {
+                    i+=Separator0_Size;
+                    y++;
+                    x=0;
+                    continue;
+                }
+            }
+
+            //Carriage return
+            if (i+Separator1_Size<=l)
+            {
+                bool IsSeparator1=true;
+                for (size_t j=0; j<Separator1_Size; j++)
+                {
+                    if (ToWrite[i+j]!= Separator[1][j])
+                    {
+                        IsSeparator1=false;
+                        break;
+                    }
+                }
+                if (IsSeparator1)
+                {
+                    i+=Separator1_Size;
+                    x++;
+                    continue;
+                }
+            }
+        }
+
+        if (y>=size())
+        {
+            size_t PreviousSize=size();
+            resize(y+1);
+            for (size_t j=0; j<=y; j++)
+                operator[](j).Separator_Set(0, Separator[1]);
+        }
+        ZtringList& Line=operator[](y);
+        if (x>=Line.size())
+            Line.resize(x+1);
+        Line.operator[](x).push_back(ToWrite[i]);
+
+        i++;
     }
-    while (!Fini);
 }
 
 void ZtringListList::Write(const ZtringList &ToWrite, size_type Pos)
@@ -367,7 +436,7 @@ void ZtringListList::Write(const ZtringList &ToWrite, size_type Pos)
             reserve(capacity()*2);
 
         while (Pos>size())
-            push_back (_T(""));
+            push_back (Ztring());
         push_back(ToWrite);
     }
     else
@@ -377,7 +446,7 @@ void ZtringListList::Write(const ZtringList &ToWrite, size_type Pos)
 void ZtringListList::Write(const Ztring &ToWrite, size_type Pos0, size_type Pos1)
 {
     if (Pos0>=size())
-        Write(_T(""), Pos0);
+        Write(Ztring(), Pos0);
 
     operator[](Pos0).Write(ToWrite, Pos1);
 }
@@ -438,7 +507,7 @@ void ZtringListList::Swap (size_type Pos0_A, size_type Pos0_B)
     else
         Pos_Max=Pos0_A;
     if (Pos_Max>=size())
-        Write(_T(""), Pos_Max);
+        Write(Ztring(), Pos_Max);
 
     operator [] (Pos0_A).swap(operator [] (Pos0_B));
 }
@@ -500,7 +569,7 @@ Ztring ZtringListList::FindValue (const Ztring &ToFind, size_type Pos1Value, siz
 {
     size_type Pos0=Find(ToFind, Pos1, Pos0Begin, Comparator);
     if (Pos0==Error)
-        return _T("");
+        return Ztring();
 
     return Read(Pos0, Pos1Value);
 }
@@ -567,11 +636,3 @@ void ZtringListList::Max_Set (size_type Level, size_type NewMax)
 //***************************************************************************
 
 } //namespace
-
-
-
-
-
-
-
-
