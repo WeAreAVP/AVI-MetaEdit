@@ -4,10 +4,14 @@ Notes:
 - Deleted
 x Correction
 
-Version 1.0.1, 2015-
+Version 1.0.1, 2017-09-26
 -------------
-x Potential crash during verification of a MD5 present in the file
-x Potential file corruption (insertion of 2 padding bytes instead of 1) when re-writing the file
++ Packages for latest versions of Debian, Ubuntu, Fedora, RHEL/CentOS...
++ Update of third party libs (Qt)
+x Fix crash on macOS
+x Drag and drop was not working on newest versions of macOS
+x Fix potential file corruption (insertion of 2 padding bytes instead of 1) when re-writing the file
+x Fix potential crash during verification of a MD5 present in the file
 
 Version 1.0.0, 2012-01-18
 -------------

@@ -17,13 +17,13 @@
 
 //---------------------------------------------------------------------------
 const char* NameVersion_HTML() {return
-    "<a href=\"http://www.archives.gov/preservation/products/\">U.S. National Archives</a> AVI MetaEdit 1.0.0"
+    "<a href=\"http://www.archives.gov/preservation/products/\">U.S. National Archives</a> AVI MetaEdit 1.0.1"
 ;}
 
 //---------------------------------------------------------------------------
 const char* NameVersion_Text() {return
 "U.S. National Archives\n"
-"AVI MetaEdit 1.0.0"
+"AVI MetaEdit 1.0.1"
 ;}
 
 //***************************************************************************
