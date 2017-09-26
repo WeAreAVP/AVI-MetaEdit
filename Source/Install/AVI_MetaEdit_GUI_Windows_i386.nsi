@@ -5,7 +5,7 @@ RequestExecutionLevel admin
 !define PRODUCT_NAME "AVI MetaEdit"
 !define PRODUCT_NAME_EXE "${PRODUCT_NAME}.exe"
 !define PRODUCT_PUBLISHER "U.S. National Archives"
-!define PRODUCT_VERSION "1.0.0"
+!define PRODUCT_VERSION "1.0.1"
 !define PRODUCT_VERSION4 "${PRODUCT_VERSION}.0"
 !define PRODUCT_WEB_SITE "http://www.archives.gov/"
 !define COMPANY_REGISTRY "Software\U.S. National Archives"

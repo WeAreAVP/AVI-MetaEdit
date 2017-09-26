@@ -4,7 +4,7 @@
 
 # norootforbuild
 
-%define avimetaedit_version		1.0.0
+%define avimetaedit_version		1.0.1
 
 Name:			avimetaedit
 Version:		%avimetaedit_version
@@ -167,6 +167,6 @@ popd
 %{_datadir}/kde4/services/ServiceMenus/*.desktop
 
 %changelog
-* Wed Jan 01 2014 MediaArea.net SARL <info@mediaarea.net> - 1.0.0-0
+* Wed Jan 01 2014 MediaArea.net SARL <info@mediaarea.net> - 1.0.1-0
 - See History.txt for more info and real dates
 
