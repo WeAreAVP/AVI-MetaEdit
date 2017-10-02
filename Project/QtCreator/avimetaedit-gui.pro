@@ -17,6 +17,12 @@ macx {
     LIBS += -framework CoreFoundation
     QMAKE_INFO_PLIST = ../Mac/Info.plist
     ICON = ../Mac/Logo.icns
+
+    contains(MACSTORE, yes|1) {
+        QMAKE_CFLAGS += -gdwarf-2
+        QMAKE_CXXFLAGS += -gdwarf-2
+        QMAKE_MACOSX_DEPLOYMENT_TARGET = 10.7
+    }
 }
 
 unix {
