@@ -58,4 +58,5 @@ package_avimetaedit-gui() {
     install -D -m 0644 "${srcdir}"/avimetaedit/Project/GNU/GUI/avimetaedit-gui.desktop "${pkgdir}"/usr/share/applications/avimetaedit-gui.desktop
     install -D -m 0644 "${srcdir}"/avimetaedit/Project/GNU/GUI/avimetaedit-gui.kde3.desktop "${pkgdir}"/usr/share/apps/konqueror/servicemenus/avimetaedit-gui.desktop
     install -D -m 0644 "${srcdir}"/avimetaedit/Project/GNU/GUI/avimetaedit-gui.kde4.desktop "${pkgdir}"/usr/share/kde4/services/ServiceMenus/avimetaedit-gui.desktop
+    install -D -m 0644 "${srcdir}"/avimetaedit/Project/GNU/GUI/avimetaedit-gui.kde4.desktop "${pkgdir}"/usr/share/kservices5/ServiceMenus/avimetaedit-gui.desktop
 }

@@ -141,8 +141,12 @@ popd
 %__install -dm 755 %{buildroot}/%{_datadir}/kde4/services/ServiceMenus/
 %__install -m 644 Project/GNU/GUI/avimetaedit-gui.kde4.desktop \
 	%{buildroot}/%{_datadir}/kde4/services/ServiceMenus/avimetaedit-gui.desktop
+%__install -dm 755 %{buildroot}/%{_datadir}/kservices5/ServiceMenus/
+%__install -m 644 Project/GNU/GUI/avimetaedit-gui.kde4.desktop \
+	%{buildroot}/%{_datadir}/kservices5/ServiceMenus/avimetaedit-gui.desktop
 %if 0%{?suse_version}
   %suse_update_desktop_file -n %{buildroot}/%{_datadir}/kde4/services/ServiceMenus/avimetaedit-gui.desktop AudioVideo AudioVideoEditing
+  %suse_update_desktop_file -n %{buildroot}/%{_datadir}/kservices5/ServiceMenus/avimetaedit-gui.desktop AudioVideo AudioVideoEditing
 %endif
 
 %clean
@@ -173,6 +177,9 @@ popd
 %dir %{_datadir}/kde4/services
 %dir %{_datadir}/kde4/services/ServiceMenus
 %{_datadir}/kde4/services/ServiceMenus/*.desktop
+%dir %{_datadir}/kservices5
+%dir %{_datadir}/kservices5/ServiceMenus
+%{_datadir}/kservices5/ServiceMenus/*.desktop
 
 %changelog
 * Wed Jan 01 2014 MediaArea.net SARL <info@mediaarea.net> - 1.0.1-0
