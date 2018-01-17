@@ -12,28 +12,32 @@
 #include "Common/Core.h"
 #include <vector>
 #include <algorithm>
-#include <QtGui/QStatusBar>
-#include <QtGui/QTextEdit>
+#include <QStatusBar>
+#include <QTextEdit>
 #include "GUI/Qt/GUI_Main_Technical_Table.h"
 #include "GUI/Qt/GUI_Main_Technical_Text.h"
 #include "GUI/Qt/GUI_Main_Core_Table.h"
 #include "GUI/Qt/GUI_Main_Core_Text.h"
 #include "GUI/Qt/GUI_Main_Output_Log.h"
-#include "GUI/Qt/GUI_Main_Output_stderr.h"
 #include "GUI/Qt/GUI_Main_Output_Trace.h"
 #include "GUI/Qt/GUI_Preferences.h"
-#include <QtCore/QEvent>
-#include <QtCore/QMimeData>
-#include <QtCore/QUrl>
-#include <QtGui/QApplication>
-#include <QtGui/QDropEvent>
-#include <QtGui/QDragEnterEvent>
-#include <QtGui/QMessageBox>
-#include <QtGui/QDesktopWidget>
-#include <QtGui/QProgressDialog>
-#include <QtCore/QThread>
-#include <QtCore/QTimer>
+#include <QEvent>
+#include <QMimeData>
+#include <QUrl>
+#include <QApplication>
+#include <QDropEvent>
+#include <QDragEnterEvent>
+#include <QMessageBox>
+#include <QDesktopWidget>
+#include <QProgressDialog>
+#include <QThread>
+#include <QTimer>
 #include "ZenLib/Ztring.h"
+
+#if defined(__APPLE__) && QT_VERSION < 0x050400
+#include <CoreFoundation/CFURL.h>
+#endif
+
 using namespace std;
 //---------------------------------------------------------------------------
 
@@ -90,7 +94,7 @@ GUI_Main::GUI_Main(Core* _C)
     
     //GUI
     setWindowTitle("AVI MetaEdit - U.S. National Archives");
-    setWindowIcon (QIcon(":/Image/Brand/Logo.gif"));
+    setWindowIcon (QIcon(":/Image/Brand/Logo.png"));
 
     /*
     QMessageBox MessageBox;
@@ -98,7 +102,7 @@ GUI_Main::GUI_Main(Core* _C)
     MessageBox.setText("This is an unstable version of AVI MetaEdit and your files can be damaged.\nBACKUP your files before you edit them");
     MessageBox.setDefaultButton(QMessageBox::Ok);
     MessageBox.setIcon(QMessageBox::Warning);
-    MessageBox.setWindowIcon(QIcon(":/Image/Brand/Logo.gif"));
+    MessageBox.setWindowIcon(QIcon(":/Image/Brand/Logo.png"));
     MessageBox.exec();
     */
 
@@ -197,9 +201,30 @@ void GUI_Main::dropEvent(QDropEvent *event)
     const QMimeData* Data=event->mimeData ();
     if (event->mimeData()->hasUrls())
     {
-        foreach (QUrl url, event->mimeData()->urls())
+        QList<QUrl> urls=event->mimeData()->urls();
+        for (int Pos=0; Pos<urls.size(); Pos++)
         {
-            Ztring File; File.From_UTF8(url.toLocalFile().toUtf8().data());
+            Ztring File;
+#if defined(__APPLE__) && QT_VERSION < 0x050400
+            if (urls[Pos].url().startsWith("file:///.file/id="))
+            {
+                CFErrorRef Error = 0;
+                CFURLRef Cfurl = urls[Pos].toCFURL();
+                CFURLRef Absurl = CFURLCreateFilePathURL(kCFAllocatorDefault, Cfurl, &Error);
+
+                if(Error)
+                    continue;
+
+                File.From_UTF8(QUrl::fromCFURL(Absurl).toLocalFile().toUtf8().data());
+                CFRelease(Cfurl);
+                CFRelease(Absurl);
+            }
+            else
+#endif
+            {
+                File.From_UTF8(urls[Pos].toLocalFile().toUtf8().data());
+            }
+
             #ifdef __WINDOWS__
                 File.FindAndReplace("/", "\\", 0, Ztring_Recursive);
             #endif // __WINDOWS__
@@ -244,7 +269,7 @@ bool GUI_Main::Close(const string &FileName)
                 #endif // (QT_VERSION >= 0x040300)
             #endif // (QT_VERSION >= 0x040200)
             MessageBox.setIcon(QMessageBox::Warning);
-            MessageBox.setWindowIcon(QIcon(":/Image/Brand/Logo.gif"));
+            MessageBox.setWindowIcon(QIcon(":/Image/Brand/Logo.png"));
             switch (MessageBox.exec())
             {
                 case QMessageBox::Save    : // Save was clicked
@@ -288,7 +313,7 @@ bool GUI_Main::Close(const string &FileName)
                 #endif // (QT_VERSION >= 0x040300)
             #endif // (QT_VERSION >= 0x040200)
             MessageBox.setIcon(QMessageBox::Warning);
-            MessageBox.setWindowIcon(QIcon(":/Image/Brand/Logo.gif"));
+            MessageBox.setWindowIcon(QIcon(":/Image/Brand/Logo.png"));
             switch (MessageBox.exec())
             {
                 case QMessageBox::Save    : // Save was clicked

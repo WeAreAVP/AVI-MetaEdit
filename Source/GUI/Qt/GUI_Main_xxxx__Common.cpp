@@ -18,18 +18,18 @@
 #include "Common/Core.h"
 #include "Common/Common_About.h"
 #include "ZenLib/ZtringListList.h"
-#include <QtGui/QLabel>
-#include <QtCore/QEvent>
-#include <QtGui/QFont>
-#include <QtGui/QTextEdit>
-#include <QtGui/QDateEdit>
-#include <QtGui/QSpinBox>
-#include <QtGui/QItemDelegate>
-#include <QtGui/QStandardItemModel>
-#include <QtCore/QDate>
-#include <QtGui/QContextMenuEvent>
-#include <QtGui/QAction>
-#include <QtGui/QMenu>
+#include <QLabel>
+#include <QEvent>
+#include <QFont>
+#include <QTextEdit>
+#include <QDateEdit>
+#include <QSpinBox>
+#include <QItemDelegate>
+#include <QStandardItemModel>
+#include <QDate>
+#include <QContextMenuEvent>
+#include <QAction>
+#include <QMenu>
 using namespace ZenLib;
 using namespace std;
 //---------------------------------------------------------------------------
@@ -313,7 +313,7 @@ void GUI_Main_xxxx__Common::Fill ()
     //Showing
     ZtringListList List;
     List.Separator_Set(0, EOL);
-    List.Separator_Set(1, _T(","));
+    List.Separator_Set(1, __T(","));
     List.Write(Fill_Content());
 
     //Elminating unuseful info from filenames

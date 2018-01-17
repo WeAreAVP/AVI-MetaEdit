@@ -1,34 +1,22 @@
-// ZenLib::Thread - Thread functions
-// Copyright (C) 2007-2010 MediaArea.net SARL, Info@MediaArea.net
-//
-// This software is provided 'as-is', without any express or implied
-// warranty.  In no event will the authors be held liable for any damages
-// arising from the use of this software.
-//
-// Permission is granted to anyone to use this software for any purpose,
-// including commercial applications, and to alter it and redistribute it
-// freely, subject to the following restrictions:
-//
-// 1. The origin of this software must not be misrepresented; you must not
-//    claim that you wrote the original software. If you use this software
-//    in a product, an acknowledgment in the product documentation would be
-//    appreciated but is not required.
-// 2. Altered source versions must be plainly marked as such, and must not be
-//    misrepresented as being the original software.
-// 3. This notice may not be removed or altered from any source distribution.
-//
-//+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
-//+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+/*  Copyright (c) MediaArea.net SARL. All Rights Reserved.
+ *
+ *  Use of this source code is governed by a zlib-style license that can
+ *  be found in the License.txt file in the root of the source tree.
+ */
 
 //---------------------------------------------------------------------------
-#include "ZenLib/Conf_Internal.h"
+#include "ZenLib/PreComp.h"
 #ifdef __BORLANDC__
     #pragma hdrstop
 #endif
 //---------------------------------------------------------------------------
+
+//---------------------------------------------------------------------------
+#include "ZenLib/Conf_Internal.h"
+//---------------------------------------------------------------------------
+
 //---------------------------------------------------------------------------
 #include "ZenLib/Thread.h"
-#include <iostream>
 #include <ZenLib/Ztring.h>
 #include <ZenLib/CriticalSection.h>
 //---------------------------------------------------------------------------
@@ -112,7 +100,7 @@ bool Thread::IsRunning()
 // Communicating
 //***************************************************************************
 
-void Thread::Sleep(std::size_t Millisecond)
+void Thread::Sleep(size_t Millisecond)
 {
     ((ThreadEntry*)ThreadPointer)->Sleep((unsigned long)Millisecond);
 }
@@ -158,7 +146,7 @@ void Thread::Yield()
 #endif //__BORLANDC__
 
 
-#if  defined(__VISUALC__) || \
+#if  defined(_MSC_VER) || \
     (defined(__GNUG__) && defined(__MSVCRT__)) || \
      defined(__WATCOMC__) || \
      defined(__MWERKS__)
@@ -200,23 +188,18 @@ THREAD_RETVAL THREAD_CALLCONV Thread_Start(void *param)
 //---------------------------------------------------------------------------
 Thread::Thread()
 {
-    C.Enter();
-
+    CriticalSectionLocker CSL(C);
     State=State_New;
     ThreadPointer=NULL;
 
-    C.Leave();
 }
 
 //---------------------------------------------------------------------------
 Thread::~Thread()
 {
-    C.Enter();
-
+    CriticalSectionLocker CSL(C);
     if (ThreadPointer!=NULL)
         CloseHandle((HANDLE)ThreadPointer); //ThreadPointer=NULL
-
-    C.Leave();
 }
 
 //***************************************************************************
@@ -226,12 +209,11 @@ Thread::~Thread()
 //---------------------------------------------------------------------------
 Thread::returnvalue Thread::Run()
 {
-    C.Enter();
+    CriticalSectionLocker CSL(C);
 
     //Coherency
     if (State!=State_New || ThreadPointer!=NULL)
     {
-        C.Leave();
         return Incoherent;
     }
 
@@ -249,8 +231,7 @@ Thread::returnvalue Thread::Run()
     #endif //USING_BEGINTHREAD
     if (ThreadPointer==NULL)
     {
-        C.Leave();
-        return Ressource;
+        return Resource;
     }
 
     //Running
@@ -259,7 +240,6 @@ Thread::returnvalue Thread::Run()
     //Configuring
     State=State_Running;
 
-    C.Leave();
     return Ok;
 }
 
@@ -267,29 +247,27 @@ Thread::returnvalue Thread::Run()
 Thread::returnvalue Thread::RunAgain()
 {
     //Coherency
-    C.Enter();
-
-    //Coherency
-    if (State!=State_New
-     && State!=State_Terminated)
     {
-        C.Leave();
-        return Incoherent;
+        CriticalSectionLocker CSL(C);
+
+        //Coherency
+        if (State != State_New
+            && State != State_Terminated)
+        {
+            return Incoherent;
+        }
+
+        //Configuring
+        if (State == State_Terminated)
+            State = State_New;
     }
-
-    //Configuring
-    if (State==State_Terminated)
-        State=State_New;
-
-    C.Leave();
-
     return Run();
 }
 
 //---------------------------------------------------------------------------
 Thread::returnvalue Thread::Pause()
 {
-    C.Enter();
+    CriticalSectionLocker CSL(C);
 
     //Pausing
     SuspendThread((HANDLE)ThreadPointer);
@@ -297,33 +275,30 @@ Thread::returnvalue Thread::Pause()
     //Configuring
     State=State_Paused;
 
-    C.Leave();
     return Ok;
 }
 
 //---------------------------------------------------------------------------
 Thread::returnvalue Thread::RequestTerminate()
 {
-    C.Enter();
+    CriticalSectionLocker CSL(C);
 
     //Coherency
     if (State!=State_Running)
     {
-        C.Leave();
         return IsNotRunning;
     }
 
     //Configuring
     State=State_Terminating;
 
-    C.Leave();
     return Ok;
 }
 
 //---------------------------------------------------------------------------
 Thread::returnvalue Thread::ForceTerminate()
 {
-    C.Enter();
+    CriticalSectionLocker CSL(C);
 
     //Terminating (not clean)
     TerminateThread((HANDLE)ThreadPointer, 1); ThreadPointer=NULL;
@@ -331,7 +306,6 @@ Thread::returnvalue Thread::ForceTerminate()
     //Configuring
     State=State_Terminated;
 
-    C.Leave();
     return Ok;
 }
 
@@ -341,27 +315,24 @@ Thread::returnvalue Thread::ForceTerminate()
 
 bool Thread::IsRunning()
 {
-    C.Enter();
-    bool ToReturn=State==State_Running;
-    C.Leave();
+    CriticalSectionLocker CSL(C);
+    const bool ToReturn=State==State_Running || State==State_Terminating;
     return ToReturn;
 }
 
 //---------------------------------------------------------------------------
 bool Thread::IsTerminating()
 {
-    C.Enter();
-    bool ToReturn=State==State_Terminating;
-    C.Leave();
+    CriticalSectionLocker CSL(C);
+    const bool ToReturn=State==State_Terminating;
     return ToReturn;
 }
 
 //---------------------------------------------------------------------------
 bool Thread::IsExited()
 {
-    C.Enter();
-    bool ToReturn=State==State_New || State==State_Terminated;
-    C.Leave();
+    CriticalSectionLocker CSL(C);
+    const bool ToReturn=State==State_New || State==State_Terminated;
     return ToReturn;
 }
 
@@ -378,7 +349,7 @@ void Thread::Entry()
 //***************************************************************************
 
 //---------------------------------------------------------------------------
-void Thread::Sleep(std::size_t Millisecond)
+void Thread::Sleep(size_t Millisecond)
 {
     ::Sleep((DWORD)Millisecond);
 }
@@ -396,13 +367,12 @@ void Thread::Yield()
 //---------------------------------------------------------------------------
 Thread::returnvalue Thread::Internal_Exit()
 {
-    C.Enter();
+    CriticalSectionLocker CSL(C);
 
     //Coherency
     if (State!=State_Running
      && State!=State_Terminating)
     {
-        C.Leave();
         return IsNotRunning;
     }
 
@@ -412,7 +382,6 @@ Thread::returnvalue Thread::Internal_Exit()
     //Configuring
     State=State_Terminated;
 
-    C.Leave();
     return Ok;
 }
 
@@ -458,12 +427,10 @@ void *Thread_Start(void *param)
 //---------------------------------------------------------------------------
 Thread::Thread()
 {
-    C.Enter();
+    CriticalSectionLocker CSL(C);
 
     State=State_New;
     ThreadPointer=NULL;
-
-    C.Leave();
 
 }
 
@@ -486,12 +453,11 @@ void Thread::Entry()
 
 Thread::returnvalue Thread::Run()
 {
-    C.Enter();
+    CriticalSectionLocker CSL(C);
 
     //Coherency
     if (State!=State_New || ThreadPointer!=NULL)
     {
-        C.Leave();
         return Incoherent;
     }
 
@@ -499,35 +465,33 @@ Thread::returnvalue Thread::Run()
     pthread_attr_t Attr;
     pthread_attr_init(&Attr);
     pthread_attr_setdetachstate(&Attr, PTHREAD_CREATE_DETACHED);
-    
+
     //Running
     pthread_create((pthread_t*)&ThreadPointer, &Attr, Thread_Start, (void*)this);
 
     //Configuring
     State=State_Running;
 
-    C.Leave();
     return Ok;
 }
 
 Thread::returnvalue Thread::RunAgain()
 {
-    //Coherency
-    C.Enter();
-
-    //Coherency
-    if (State!=State_New
-     && State!=State_Terminated)
     {
-        C.Leave();
-        return Incoherent;
+        //Coherency
+        CriticalSectionLocker CSL(C);
+
+        //Coherency
+        if (State!=State_New
+        && State!=State_Terminated)
+        {
+            return Incoherent;
+        }
+
+        //Configuring
+        if (State==State_Terminated)
+            State=State_New;
     }
-
-    //Configuring
-    if (State==State_Terminated)
-        State=State_New;
-
-    C.Leave();
 
     return Run();
 }
@@ -540,17 +504,15 @@ Thread::returnvalue Thread::Pause()
 
 Thread::returnvalue Thread::RequestTerminate()
 {
-    C.Enter();
+    CriticalSectionLocker CSL(C);
 
     if (State!=State_Running)
     {
-        C.Leave();
         return IsNotRunning;
     }
 
     State=State_Terminating;
 
-    C.Leave();
     return Ok;
 }
 
@@ -571,27 +533,24 @@ Thread::returnvalue Thread::ForceTerminate()
 //---------------------------------------------------------------------------
 bool Thread::IsRunning()
 {
-    C.Enter();
-    bool ToReturn=State==State_Running;
-    C.Leave();
+    CriticalSectionLocker CSL(C);
+    const bool ToReturn=State==State_Running;
     return ToReturn;
 }
 
 //---------------------------------------------------------------------------
 bool Thread::IsTerminating()
 {
-    C.Enter();
-    bool ToReturn=State==State_Terminating;
-    C.Leave();
+    CriticalSectionLocker CSL(C);
+    const bool ToReturn=State==State_Terminating;
     return ToReturn;
 }
 
 //---------------------------------------------------------------------------
 bool Thread::IsExited()
 {
-    C.Enter();
-    bool ToReturn=State==State_New || State==State_Terminating;
-    C.Leave();
+    CriticalSectionLocker CSL(C);
+    const bool ToReturn=State==State_New || State==State_Terminating;
     return ToReturn;
 }
 
@@ -599,7 +558,7 @@ bool Thread::IsExited()
 // Communicating
 //***************************************************************************
 
-void Thread::Sleep(std::size_t)
+void Thread::Sleep(size_t)
 {
 }
 
@@ -616,23 +575,21 @@ void Thread::Yield()
 
 Thread::returnvalue Thread::Internal_Exit()
 {
-    C.Enter();
+    CriticalSectionLocker CSL(C);
 
     //Coherency
     if (State!=State_Running
      && State!=State_Terminating)
     {
-        C.Leave();
         return IsNotRunning;
     }
 
     //Closing old handle
-    ; ThreadPointer=NULL;
+    ThreadPointer=NULL;
 
     //Configuring
     State=State_Terminated;
 
-    C.Leave();
     return Ok;
 }
 
@@ -647,4 +604,3 @@ Thread::returnvalue Thread::Internal_Exit()
 #endif //ZENLIB_USEWX
 //+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 //+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
-

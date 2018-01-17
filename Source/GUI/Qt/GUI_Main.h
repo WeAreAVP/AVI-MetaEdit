@@ -13,11 +13,11 @@
 //---------------------------------------------------------------------------
 
 //---------------------------------------------------------------------------
-#include <QtGui/QMainWindow>
-#include <QtGui/QMenu>
-#include <QtGui/QAction>
-#include <QtGui/QActionGroup>
-#include <QtGui/QToolBar>
+#include <QMainWindow>
+#include <QMenu>
+#include <QAction>
+#include <QActionGroup>
+#include <QToolBar>
 #include <string>
 using namespace std;
 //---------------------------------------------------------------------------
@@ -104,7 +104,7 @@ private:
     QAction*        Menu_Help_Brand_Website;
 
 
-public slots:
+public Q_SLOTS:
     //Menu - Actions
     void OnMenu_File_Open_Files                     ();
     void OnMenu_File_Open_Directory                 ();

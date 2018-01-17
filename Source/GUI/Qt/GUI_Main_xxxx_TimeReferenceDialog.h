@@ -14,7 +14,7 @@
 
 //---------------------------------------------------------------------------
 class Core;
-#include <QtGui/QDialog>
+#include <QDialog>
 #include <string>
 #include <ZenLib/Conf.h>
 class QTimeEdit;
@@ -48,7 +48,7 @@ public:
     QPushButton*        Cancel;
     QPushButton*        Valid;
 
-private slots:
+private Q_SLOTS:
     //Actions
     void OnAccept                   ();
     void OnTimeChanged              (const QTime &Time);

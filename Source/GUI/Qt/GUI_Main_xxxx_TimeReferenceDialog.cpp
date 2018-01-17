@@ -12,16 +12,16 @@
 #include "Common/Core.h"
 #include "ZenLib/Ztring.h"
 #include "ZenLib/File.h"
-#include <QtGui/QTimeEdit>
-#include <QtGui/QLabel>
-#include <QtGui/QLineEdit>
-#include <QtCore/QEvent>
-#include <QtGui/QGridLayout>
-#include <QtGui/QDialogButtonBox>
-#include <QtGui/QIcon>
-#include <QtGui/QMessageBox>
-#include <QtGui/QSpinBox>
-#include <QtGui/QCheckBox>
+#include <QTimeEdit>
+#include <QLabel>
+#include <QLineEdit>
+#include <QEvent>
+#include <QGridLayout>
+#include <QDialogButtonBox>
+#include <QIcon>
+#include <QMessageBox>
+#include <QSpinBox>
+#include <QCheckBox>
 #include <ZenLib/Ztring.h>
 using namespace ZenLib;
 //---------------------------------------------------------------------------
@@ -42,7 +42,7 @@ GUI_Main_xxxx_TimeReferenceDialog::GUI_Main_xxxx_TimeReferenceDialog(Core* _C, c
     //Configuration
     setWindowFlags(windowFlags()&(0xFFFFFFFF-Qt::WindowContextHelpButtonHint));
     setWindowTitle(Field.c_str());
-    setWindowIcon (QIcon(":/Image/Brand/Logo.gif"));
+    setWindowIcon (QIcon(":/Image/Brand/Logo.png"));
 
     //Get info
     FrameRate=Ztring(C->Get(FileName, "FrameRate")).To_float32();
@@ -90,7 +90,7 @@ GUI_Main_xxxx_TimeReferenceDialog::GUI_Main_xxxx_TimeReferenceDialog(Core* _C, c
     {
         FrameCount=TimeReference.substr(9, string::npos);
         if (Field_!="ISMP")
-            DropFrame=TimeReference[8]==_T(';');
+            DropFrame=TimeReference[8]==__T(';');
         TimeReference.resize(8);
     }
     TimeEdit->setTime(QTime::fromString(QString().fromUtf8(TimeReference.To_Local().c_str()), Qt::ISODate));
@@ -122,7 +122,7 @@ void GUI_Main_xxxx_TimeReferenceDialog::OnAccept ()
         Value+=DropFrameEdit->isChecked()?';':':';
     Ztring FrameCount; FrameCount.From_Number(FrameEdit->value());
     if (FrameCount.size()==1)
-        FrameCount.insert(0, 1, _T('0'));
+        FrameCount.insert(0, 1, __T('0'));
     Value+=FrameCount;
     if (!C->IsValid(FileName, Field, Value))
     {
@@ -133,7 +133,7 @@ void GUI_Main_xxxx_TimeReferenceDialog::OnAccept ()
             MessageBox.setStandardButtons(QMessageBox::Ok);
         #endif // (QT_VERSION >= 0x040200)
         MessageBox.setIcon(QMessageBox::Warning);
-        MessageBox.setWindowIcon(QIcon(":/Image/Brand/Logo.gif"));
+        MessageBox.setWindowIcon(QIcon(":/Image/Brand/Logo.png"));
         MessageBox.exec();
         return;
     }

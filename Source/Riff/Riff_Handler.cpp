@@ -140,13 +140,13 @@ bool Riff_Handler::Open(const string &FileName)
     //MediaInfo
     /*
     MediaInfo MI;
-    MI.Option(_T("ParseSpeed"), _T("0"));
+    MI.Option(__T("ParseSpeed"), __T("0"));
     if (MI.Open(FileName))
     {
-        MediaInfo_General_Format=MI.Get(Stream_General, 0, _T("Format"));
-        if (!MI.Get(Stream_General, 0, _T("Format_Profile")).empty())
-            MediaInfo_General_Format+=_T(" (")+MI.Get(Stream_General, 0, _T("Format_Profile"))+_T(')');
-        MediaInfo_General_Duration=MI.Get(Stream_General, 0, _T("Duration/String3"));
+        MediaInfo_General_Format=MI.Get(Stream_General, 0, __T("Format"));
+        if (!MI.Get(Stream_General, 0, __T("Format_Profile")).empty())
+            MediaInfo_General_Format+=__T(" (")+MI.Get(Stream_General, 0, __T("Format_Profile"))+__T(')');
+        MediaInfo_General_Duration=MI.Get(Stream_General, 0, __T("Duration/String3"));
         MediaInfo_Video_Format.clear();
         MediaInfo_Video_CodecID.clear();
         MediaInfo_Video_Width.clear();
@@ -157,20 +157,20 @@ bool Riff_Handler::Open(const string &FileName)
         {
             if (!MediaInfo_Video_Format.empty())
             {
-                MediaInfo_Video_Format+=_T(" / ");
-                MediaInfo_Video_CodecID+=_T(" / ");
-                MediaInfo_Video_Width+=_T(" / ");
-                MediaInfo_Video_Height+=_T(" / ");
-                MediaInfo_Video_BitDepth+=_T(" / ");
-                MediaInfo_Video_BitRate+=_T(" / ");
+                MediaInfo_Video_Format+=__T(" / ");
+                MediaInfo_Video_CodecID+=__T(" / ");
+                MediaInfo_Video_Width+=__T(" / ");
+                MediaInfo_Video_Height+=__T(" / ");
+                MediaInfo_Video_BitDepth+=__T(" / ");
+                MediaInfo_Video_BitRate+=__T(" / ");
             }
-            MediaInfo_Video_Format+=MI.Get(Stream_Video, 0, _T("Format"));
-            MediaInfo_Video_CodecID+=MI.Get(Stream_Video, 0, _T("CodecID"));
-            MediaInfo_Video_FrameRate+=MI.Get(Stream_Video, 0, _T("FrameRate"));
-            MediaInfo_Video_Width+=MI.Get(Stream_Video, 0, _T("Width"));
-            MediaInfo_Video_Height+=MI.Get(Stream_Video, 0, _T("Height"));
-            MediaInfo_Video_BitDepth+=MI.Get(Stream_Video, 0, _T("BitDepth"));
-            MediaInfo_Video_BitRate+=MI.Get(Stream_Video, 0, _T("BitRate/String"));
+            MediaInfo_Video_Format+=MI.Get(Stream_Video, 0, __T("Format"));
+            MediaInfo_Video_CodecID+=MI.Get(Stream_Video, 0, __T("CodecID"));
+            MediaInfo_Video_FrameRate+=MI.Get(Stream_Video, 0, __T("FrameRate"));
+            MediaInfo_Video_Width+=MI.Get(Stream_Video, 0, __T("Width"));
+            MediaInfo_Video_Height+=MI.Get(Stream_Video, 0, __T("Height"));
+            MediaInfo_Video_BitDepth+=MI.Get(Stream_Video, 0, __T("BitDepth"));
+            MediaInfo_Video_BitRate+=MI.Get(Stream_Video, 0, __T("BitRate/String"));
         }
         MediaInfo_Audio_Format.clear();
         MediaInfo_Audio_CodecID.clear();
@@ -182,19 +182,19 @@ bool Riff_Handler::Open(const string &FileName)
         {
             if (!MediaInfo_Audio_Format.empty())
             {
-                MediaInfo_Audio_Format+=_T(" / ");
-                MediaInfo_Audio_CodecID+=_T(" / ");
-                MediaInfo_Audio_Channels+=_T(" / ");
-                MediaInfo_Audio_SampleRate+=_T(" / ");
-                MediaInfo_Audio_BitDepth+=_T(" / ");
-                MediaInfo_Audio_BitRate+=_T(" / ");
+                MediaInfo_Audio_Format+=__T(" / ");
+                MediaInfo_Audio_CodecID+=__T(" / ");
+                MediaInfo_Audio_Channels+=__T(" / ");
+                MediaInfo_Audio_SampleRate+=__T(" / ");
+                MediaInfo_Audio_BitDepth+=__T(" / ");
+                MediaInfo_Audio_BitRate+=__T(" / ");
             }
-            MediaInfo_Audio_Format+=MI.Get(Stream_Audio, 0, _T("Format"));
-            MediaInfo_Audio_CodecID+=MI.Get(Stream_Audio, 0, _T("CodecID"));
-            MediaInfo_Audio_Channels+=MI.Get(Stream_Audio, 0, _T("Channel(s)"));
-            MediaInfo_Audio_SampleRate+=MI.Get(Stream_Audio, 0, _T("SamplingRate"));
-            MediaInfo_Audio_BitDepth+=MI.Get(Stream_Audio, 0, _T("BitDepth"));
-            MediaInfo_Audio_BitRate+=MI.Get(Stream_Audio, 0, _T("BitRate/String"));
+            MediaInfo_Audio_Format+=MI.Get(Stream_Audio, 0, __T("Format"));
+            MediaInfo_Audio_CodecID+=MI.Get(Stream_Audio, 0, __T("CodecID"));
+            MediaInfo_Audio_Channels+=MI.Get(Stream_Audio, 0, __T("Channel(s)"));
+            MediaInfo_Audio_SampleRate+=MI.Get(Stream_Audio, 0, __T("SamplingRate"));
+            MediaInfo_Audio_BitDepth+=MI.Get(Stream_Audio, 0, __T("BitDepth"));
+            MediaInfo_Audio_BitRate+=MI.Get(Stream_Audio, 0, __T("BitRate/String"));
         }
     }
     */
@@ -287,7 +287,7 @@ bool Riff_Handler::Open(const string &FileName)
                         MD5_PerItem.insert(MD5_PerItem.begin(), '0'); //Padding with 0, this must be a 32-byte string
                 }
                 if (!MD5_Total.empty())
-                    MD5_Total+=_T(" / ");
+                    MD5_Total+=__T(" / ");
                 MD5_Total+=MD5_PerItem;
             }
             MD5_Total.MakeLowerCase();
@@ -334,9 +334,9 @@ bool Riff_Handler::Open(const string &FileName)
         
         //Tech info
         if (Chunks->Global->AVI__hdrl_dmlh)
-            MediaInfo_General_Format=_T("AVI (OpenDML)");
+            MediaInfo_General_Format=__T("AVI (OpenDML)");
         else
-            MediaInfo_General_Format=_T("AVI");
+            MediaInfo_General_Format=__T("AVI");
         MediaInfo_General_Duration=Duration_Duration3(float64_int64s(((float64)Chunks->Global->AVI__hdrl_avih->TotalFrames)*Chunks->Global->AVI__hdrl_avih->MicrossecPerFrame/1000));
         MediaInfo_Video_Format.clear();
         MediaInfo_Video_CodecID.clear();
@@ -358,12 +358,12 @@ bool Riff_Handler::Open(const string &FileName)
                 case Elements::AVI__hdlr_strl_strh_auds :
                                                             if (!MediaInfo_Audio_Format.empty())
                                                             {
-                                                                MediaInfo_Audio_Format+=_T(" / ");
-                                                                MediaInfo_Audio_CodecID+=_T(" / ");
-                                                                MediaInfo_Audio_Channels+=_T(" / ");
-                                                                MediaInfo_Audio_SampleRate+=_T(" / ");
-                                                                MediaInfo_Audio_BitDepth+=_T(" / ");
-                                                                MediaInfo_Audio_BitRate+=_T(" / ");
+                                                                MediaInfo_Audio_Format+=__T(" / ");
+                                                                MediaInfo_Audio_CodecID+=__T(" / ");
+                                                                MediaInfo_Audio_Channels+=__T(" / ");
+                                                                MediaInfo_Audio_SampleRate+=__T(" / ");
+                                                                MediaInfo_Audio_BitDepth+=__T(" / ");
+                                                                MediaInfo_Audio_BitRate+=__T(" / ");
                                                             }
                                                             MediaInfo_Audio_Format+=Format_FromCodecID_Audio(Chunks->Global->AVI__hdrl_strl_strf[Pos]->FormatTag);
                                                             MediaInfo_Audio_CodecID+=Ztring().From_CC2(Chunks->Global->AVI__hdrl_strl_strf[Pos]->FormatTag);
@@ -383,13 +383,13 @@ bool Riff_Handler::Open(const string &FileName)
                 case Elements::AVI__hdlr_strl_strh_vids : 
                                                             if (!MediaInfo_Video_Format.empty())
                                                             {
-                                                                MediaInfo_Video_Format+=_T(" / ");
-                                                                MediaInfo_Video_CodecID+=_T(" / ");
-                                                                MediaInfo_Video_FrameRate+=_T(" / ");
-                                                                MediaInfo_Video_Width+=_T(" / ");
-                                                                MediaInfo_Video_Height+=_T(" / ");
-                                                                MediaInfo_Video_BitDepth+=_T(" / ");
-                                                                MediaInfo_Video_BitRate+=_T(" / ");
+                                                                MediaInfo_Video_Format+=__T(" / ");
+                                                                MediaInfo_Video_CodecID+=__T(" / ");
+                                                                MediaInfo_Video_FrameRate+=__T(" / ");
+                                                                MediaInfo_Video_Width+=__T(" / ");
+                                                                MediaInfo_Video_Height+=__T(" / ");
+                                                                MediaInfo_Video_BitDepth+=__T(" / ");
+                                                                MediaInfo_Video_BitRate+=__T(" / ");
                                                             }
                                                             MediaInfo_Video_Format+=Format_FromCodecID_Video(Chunks->Global->AVI__hdrl_strl_strf[Pos]->Compression);
                                                             MediaInfo_Video_CodecID+=Ztring().From_CC4(Chunks->Global->AVI__hdrl_strl_strf[Pos]->Compression);
@@ -549,8 +549,12 @@ string Riff_Handler::Get(const string &Field)
     //Special cases
     if (Field=="FrameRate")
         return MediaInfo_Video_FrameRate;
-    
-    return Get(Field_Get(Field), *chunk_strings_Get(Field)); 
+
+    Riff_Base::global::chunk_strings** Chunk_Strings=chunk_strings_Get(Field);
+    if (!Chunk_Strings || !*Chunk_Strings)
+        return string();
+
+    return Get(Field_Get(Field), *Chunk_Strings);
 }
 
 //---------------------------------------------------------------------------
@@ -657,8 +661,12 @@ bool Riff_Handler::IsModified(const string &Field)
                  ToReturn=true;
         return ToReturn;
     }
-    
-    return IsModified(Field_Get(Field=="timereference (translated)"?Ztring("timereference"):Field), *chunk_strings_Get(Field)); 
+
+    Riff_Base::global::chunk_strings** Chunk_Strings=chunk_strings_Get(Field);
+        if (!Chunk_Strings || !*Chunk_Strings)
+            return false;
+
+    return IsModified(Field_Get(Field=="timereference (translated)"?Ztring("timereference"):Field), *Chunk_Strings);
 }
 
 //---------------------------------------------------------------------------
@@ -701,7 +709,7 @@ bool Riff_Handler::IsValid(const string &Field_, const string &Value_, rules Rul
     {
         //Test
         ZtringList Values;
-        Values.Separator_Set(0, _T(" / "));
+        Values.Separator_Set(0, __T(" / "));
         Values.Write(Value);
         string Message;
         for (size_t ValuePos=0; ValuePos<Values.size(); ValuePos++)
@@ -729,7 +737,7 @@ bool Riff_Handler::IsValid(const string &Field_, const string &Value_, rules Rul
     {
         //Test
         ZtringList Values;
-        Values.Separator_Set(0, _T(" / "));
+        Values.Separator_Set(0, __T(" / "));
         Values.Write(Value);
         string Message;
         for (size_t ValuePos=0; ValuePos<Values.size(); ValuePos++)
@@ -1020,13 +1028,21 @@ bool Riff_Handler::IsValid(const string &Field_, const string &Value_, rules Rul
 //---------------------------------------------------------------------------
 bool Riff_Handler::IsOriginal(const string &Field, const string &Value)
 {
-    return IsOriginal(Field_Get(Field=="timereference (translated)"?Ztring("timereference"):Field), Value, *chunk_strings_Get(Field)); 
+    Riff_Base::global::chunk_strings** Chunk_Strings=chunk_strings_Get(Field);
+    if (!Chunk_Strings || !*Chunk_Strings)
+        return true;
+
+    return IsOriginal(Field_Get(Field=="timereference (translated)"?Ztring("timereference"):Field), Value, *Chunk_Strings);
 }
 
 //---------------------------------------------------------------------------
 string Riff_Handler::History(const string &Field)
 {
-    return History(Field_Get(Field), *chunk_strings_Get(Field)); 
+    Riff_Base::global::chunk_strings** Chunk_Strings=chunk_strings_Get(Field);
+    if (!Chunk_Strings || !*Chunk_Strings)
+        return string();
+
+    return History(Field_Get(Field), *Chunk_Strings);
 }
 
 //***************************************************************************
@@ -1109,7 +1125,7 @@ string Riff_Handler::Technical_Header()
 string Riff_Handler::Technical_Get()
 {
     ZtringList List;
-    List.Separator_Set(0, _T(","));
+    List.Separator_Set(0, __T(","));
     List.push_back(Chunks->Global->File_Name);
     List.push_back(Ztring::ToZtring(Chunks->Global->File_Size));
     if (File_IsValid)
@@ -1256,7 +1272,7 @@ string Riff_Handler::Get(const string &Field, Riff_Base::global::chunk_strings* 
     if (Field=="tdat" && &Chunk_Strings && Chunk_Strings)
     {
         ZtringList List;
-        List.Separator_Set(0, _T(","));
+        List.Separator_Set(0, __T(","));
         for (size_t Pos=0; Pos<xxxx_Strings_Size[Fields_Tdat]; Pos++)
             List.push_back(Chunk_Strings->Strings[Ztring(xxxx_Strings[Fields_Tdat][Pos]).MakeLowerCase()]);
         return List.Read();
@@ -1264,7 +1280,7 @@ string Riff_Handler::Get(const string &Field, Riff_Base::global::chunk_strings* 
     if (Field=="INFO" && &Chunk_Strings && Chunk_Strings)
     {
         ZtringList List;
-        List.Separator_Set(0, _T(","));
+        List.Separator_Set(0, __T(","));
         for (size_t Pos=0; Pos<xxxx_Strings_Size[Fields_Info]; Pos++)
              List.push_back(Chunk_Strings->Strings[xxxx_Strings[Fields_Info][Pos]]);
         return List.Read();
@@ -1396,8 +1412,8 @@ void Riff_Handler::Options_Update()
         PerFile_Information.str(PerFile_Information_Temp);
         
         //Checking
-        Ztring md5generated(Chunks->Global->MD5Generated->Strings["md5generated"]); md5generated.MakeLowerCase();
-        Ztring md5stored(Chunks->Global->MD5Stored->Strings["md5stored"]); md5stored.MakeLowerCase();
+        Ztring md5generated(Chunks->Global->MD5Generated?Chunks->Global->MD5Generated->Strings["md5generated"]:Ztring()); md5generated.MakeLowerCase();
+        Ztring md5stored(Chunks->Global->MD5Stored?Chunks->Global->MD5Stored->Strings["md5stored"]:Ztring()); md5stored.MakeLowerCase();
         if (!(Chunks->Global->MD5Stored && !md5stored.empty()))
         {
             Information<<Chunks->Global->File_Name<<": MD5, no existing MD5 chunk"<<endl;

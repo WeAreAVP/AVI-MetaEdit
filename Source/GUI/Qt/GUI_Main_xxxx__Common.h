@@ -15,8 +15,8 @@
 //---------------------------------------------------------------------------
 class Core;
 #include "GUI/Qt/GUI_Preferences.h"
-#include <QtGui/QTableWidget>
-#include <QtGui/QItemDelegate>
+#include <QTableWidget>
+#include <QItemDelegate>
 #include <string>
 class QEvent;
 class GUI_Main;
@@ -35,7 +35,7 @@ public:
     //Constructor/Destructor
     GUI_Main_xxxx__Common(Core* C, GUI_Main* parent);
 
-protected slots:
+protected Q_SLOTS:
     void OnItemSelectionChanged ();
 
 protected:

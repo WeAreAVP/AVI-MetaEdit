@@ -4,14 +4,14 @@
 
 # norootforbuild
 
-%define avimetaedit_version		1.0.0
+%define avimetaedit_version		1.0.1
 
 Name:			avimetaedit
 Version:		%avimetaedit_version
 Release:		1
 Summary:		Supplies technical and tag information about a video or audio file (CLI)
 Group:			Productivity/Multimedia/Other
-License:		GPL
+License:		CC0-1.0+
 URL:			http://mediaarea.net
 Packager:		Jerome Martinez <info@mediaarea.net>
 Source0:		avimetaedit_%{version}-1.tar.gz
@@ -19,8 +19,22 @@ BuildRoot:		%{_tmppath}/%{name}-%{version}-%{release}-root
 BuildRequires:	dos2unix
 BuildRequires: 	gcc-c++
 BuildRequires:	pkgconfig
+BuildRequires:  automake
+BuildRequires:  autoconf
+%if 0%{?fedora_version}
+BuildRequires:  desktop-file-utils
+%endif
 %if 0%{?suse_version}
 BuildRequires:	update-desktop-files
+%endif
+BuildRequires:  automake
+BuildRequires:  autoconf
+%if 0%{?mageia}
+BuildRequires:  sane-backends-iscan
+%if 0%{?mageia} >= 6
+BuildRequires:  libproxy-pacrunner
+%endif
+BuildRequires:  libuuid-devel
 %endif
 
 %description
@@ -33,19 +47,27 @@ AVI MetaEdit provides this service:
 %package gui
 Summary:	Supplies technical and tag information about a video or audio file (GUI)
 Group:		Productivity/Multimedia/Other
-BuildRequires:	libqt4-devel
-%if 0%{?suse_version}
-BuildRequires:	update-desktop-files
+
+%if 0%{?fedora_version} || 0%{?centos} >= 7
+BuildRequires:  pkgconfig(Qt5)
+%else
+%if 0%{?mageia}
+%ifarch x86_64
+BuildRequires:  lib64qt5base5-devel
+%else
+BuildRequires:  libqt5base5-devel
 %endif
-%if 0%{?centos_version} ||  0%{?rhel_version} || 0%{?fedora_version}
-Requires:	qt4 >= 4.0.0
+%else
+%if 0%{?suse_version} >= 1200
+BuildRequires: libqt5-qtbase-devel
+%else
+BuildRequires: libqt4-devel
 %endif
-%if 0%{?mandriva}
-Requires:	libqtgui4 >= 4.0.0
 %endif
-%if 0%{?suse_version} ||  0%{?opensuse_version}
-Requires:	libqt4 >= 4.0.0
-Requires:	libqt4-x11 >= 4.0.0
+%endif
+
+%if 0%{?rhel} >= 7
+BuildRequires:  gnu-free-sans-fonts
 %endif
 
 %description gui
@@ -58,7 +80,7 @@ AVI MetaEdit provides this service:
 This package contains the graphical user interface
 
 %prep
-%setup -q -n AVI_MetaEdit
+%setup -q -n avimetaedit
 dos2unix     *.txt Release/*.txt
 %__chmod 644 *.html *.txt Release/*.txt
 
@@ -70,27 +92,29 @@ export CXXFLAGS="$RPM_OPT_FLAGS"
 pushd Project/GNU/CLI
 	%__chmod +x autogen
 	./autogen
-	%configure
+	%if 0%{?mageia} >= 6
+		%configure --disable-dependency-tracking
+	%else
+		%configure
+	 %endif
 
 	%__make %{?jobs:-j%{jobs}}
 popd
 
 # now build GUI
-pushd Project/GNU/GUI
-	%__chmod +x autogen
-	./autogen
-	%configure
-
+pushd Project/QtCreator
+	%__chmod +x prepare
+	./prepare BINDIR=%{_bindir}
 	%__make %{?jobs:-j%{jobs}}
 popd
 
 %install
 pushd Project/GNU/CLI
-	%__make install-strip DESTDIR=%{buildroot}
+	%__make install DESTDIR=%{buildroot}
 popd
 
-pushd Project/GNU/GUI
-	%__make install-strip DESTDIR=%{buildroot}
+pushd Project/QtCreator
+    %__make install INSTALL_ROOT=%{buildroot}
 popd
 
 # icon
@@ -117,8 +141,19 @@ popd
 %__install -dm 755 %{buildroot}/%{_datadir}/kde4/services/ServiceMenus/
 %__install -m 644 Project/GNU/GUI/avimetaedit-gui.kde4.desktop \
 	%{buildroot}/%{_datadir}/kde4/services/ServiceMenus/avimetaedit-gui.desktop
+%__install -dm 755 %{buildroot}/%{_datadir}/kservices5/ServiceMenus/
+%__install -m 644 Project/GNU/GUI/avimetaedit-gui.kde4.desktop \
+	%{buildroot}/%{_datadir}/kservices5/ServiceMenus/avimetaedit-gui.desktop
 %if 0%{?suse_version}
   %suse_update_desktop_file -n %{buildroot}/%{_datadir}/kde4/services/ServiceMenus/avimetaedit-gui.desktop AudioVideo AudioVideoEditing
+  %suse_update_desktop_file -n %{buildroot}/%{_datadir}/kservices5/ServiceMenus/avimetaedit-gui.desktop AudioVideo AudioVideoEditing
+%endif
+%if %{undefined fedora_version} || 0%{?fedora_version} < 26
+%__install -dm 755 %{buildroot}%{_datadir}/appdata/
+%__install -m 644 Project/GNU/GUI/avimetaedit-gui.metainfo.xml %{buildroot}%{_datadir}/appdata/avimetaedit-gui.appdata.xml
+%else
+%__install -dm 755 %{buildroot}%{_datadir}/metainfo/
+%__install -m 644 Project/GNU/GUI/avimetaedit-gui.metainfo.xml %{buildroot}%{_datadir}/metainfo/avimetaedit-gui.metainfo.xml
 %endif
 
 %clean
@@ -149,8 +184,18 @@ popd
 %dir %{_datadir}/kde4/services
 %dir %{_datadir}/kde4/services/ServiceMenus
 %{_datadir}/kde4/services/ServiceMenus/*.desktop
+%dir %{_datadir}/kservices5
+%dir %{_datadir}/kservices5/ServiceMenus
+%{_datadir}/kservices5/ServiceMenus/*.desktop
+%if 0%{?fedora_version} && 0%{?fedora_version} >= 26
+%dir %{_datadir}/metainfo
+%{_datadir}/metainfo/*.xml
+%else
+%dir %{_datadir}/appdata
+%{_datadir}/appdata/*.xml
+%endif
 
 %changelog
-* Tue Jan 01 2012 Jerome Martinez <info@mediaarea.net> - 1.0.0-0
+* Wed Jan 01 2014 MediaArea.net SARL <info@mediaarea.net> - 1.0.1-0
 - See History.txt for more info and real dates
 

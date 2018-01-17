@@ -7,7 +7,7 @@
 //+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 //+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 
-#include <QtGui/QApplication>
+#include <QApplication>
 #ifdef __BORLANDC__
     #pragma hdrstop
 #endif
@@ -18,20 +18,13 @@
 #include <iostream>
 using namespace std;
 
-#ifdef __MACOSX__
-    #include <ApplicationServices/ApplicationServices.h>
-#endif //__MACOSX__
+#if defined(_WIN32) && !defined(_DLL)
+    #include <QtPlugin>
+    Q_IMPORT_PLUGIN(QWindowsIntegrationPlugin)
+#endif
 
 int main (int argc, char** argv)
 {
-    #ifdef __MACOSX__
-        ProcessSerialNumber PSN;
-        GetCurrentProcess(&PSN);
-        TransformProcessType(&PSN, kProcessTransformToForegroundApplication);
-    #endif //__MACOSX__
-
-    setlocale(LC_ALL, "");
-
     QApplication App(argc, argv);
     Core C;
     C.Errors_Continue=true; //Always for the GUI
